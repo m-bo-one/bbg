@@ -1,0 +1,6 @@
+front/node_modules/
+front/build/
+tmp/
+*.log
+*.tmp
+*.pb.go
