@@ -1,6 +1,7 @@
 package models
 
 import (
+	"math"
 	"strconv"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
@@ -24,6 +25,12 @@ func (t *Tank) Shoot() error {
 }
 
 func (t *Tank) Stop() error {
+	return nil
+}
+
+func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
+	// Math.atan2(this.game.input.mousePointer.worldY - this.turretSprite.y, this.game.input.mousePointer.worldX - this.turretSprite.x)
+	t.Cmd.Angle = math.Atan2(float64(*axes.Y-t.Cmd.Y), float64(*axes.X-t.Cmd.X))
 	return nil
 }
 
@@ -53,6 +60,7 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		Bullets:   &t.Bullets,
 		Speed:     &t.Speed,
 		Direction: &t.Cmd.Direction,
+		Angle:     &t.Cmd.Angle,
 	}
 }
 
@@ -72,10 +80,7 @@ func NewTank(redis *redis.Client) (*Tank, error) {
 			X:         200,
 			Y:         200,
 			Direction: direction,
-			// MouseAxes: &MouseAxes{
-			// 	X: 0,
-			// 	Y: 0,
-			// },
+			MouseAxes: &MouseAxes{},
 		},
 	}
 	encoded, err := proto.Marshal(t.ToProtobuf())
@@ -107,10 +112,11 @@ func LoadTank(redis *redis.Client, pk *uint32) (*Tank, error) {
 			X:         *pbMsg.X,
 			Y:         *pbMsg.Y,
 			Direction: *pbMsg.Direction,
-			// MouseAxes: &MouseAxes{
-			// 	X: 0,
-			// 	Y: 0,
-			// },
+			Angle:     *pbMsg.Angle,
+			MouseAxes: &MouseAxes{
+				X: 0,
+				Y: 0,
+			},
 		},
 	}, nil
 }

@@ -125,6 +125,15 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 			return
 		}
 
+	case pb.BBGProtocol_TankRotate:
+		if c.tank == nil {
+			return
+		}
+		if err := c.tank.TurretRotate(message.TankRotate.MouseAxes); err != nil {
+			log.Println(err)
+			return
+		}
+
 	default:
 		c.sendProtoData(pb.BBGProtocol_UnhandledType, nil, false)
 		return

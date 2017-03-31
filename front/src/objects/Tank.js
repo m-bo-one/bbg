@@ -63,6 +63,7 @@ class Tank {
         this.y = data.y;
         this.speed = data.speed;
         this.direction = data.direction;
+        this.turretAngle = data.angle;
     }
 
     syncData(type, data) {
@@ -100,13 +101,13 @@ class Tank {
         } 
     }
 
-    set rotation(angle) {
+    set turretAngle(angle) {
         this.turretSprite.rotation = angle;
     }
 
     rotate() {
         // console.log("My calc rotation: ", Math.atan2(this.game.input.mousePointer.worldY - this.turretSprite.y, this.game.input.mousePointer.worldX - this.turretSprite.x));
-        this.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
+        this.turretAngle = this.game.physics.arcade.angleToPointer(this.turretSprite);
         console.log("Turret rotation: ", this.turretSprite.rotation);
         this.syncData('TankRotate', {
             x: this.x,

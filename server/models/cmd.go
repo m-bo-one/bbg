@@ -11,8 +11,9 @@ type MouseAxes struct {
 type Cmd struct {
 	ID        uint32
 	X, Y      int32
+	Angle     float64
 	Action    string
 	Direction pb.Direction
 	PrevID    int32
-	// MouseAxes *MouseAxes
+	MouseAxes *MouseAxes
 }
