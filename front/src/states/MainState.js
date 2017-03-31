@@ -8,6 +8,7 @@ class MainState extends Phaser.State {
         this.game.load.image('tank', 'assets/sprites/Tank.png');
         this.game.load.image('gun-turret', 'assets/sprites/GunTurret.png');
         this.game.load.image('bullet', 'assets/sprites/Bullet.png');
+        this.game.load.image('lazer', 'assets/sprites/Lazer.png');
     }
 
     create() {
@@ -33,7 +34,7 @@ class MainState extends Phaser.State {
 
     update() {
         if (!this.currentTank) return;
-        if (this.cursors.SPACEBAR.isDown) this.currentTank.fire()  
+        if (this.cursors.SPACEBAR.isDown) this.currentTank.fire()
         switch(true) {
             case this.cursors.W.isDown:
                 this.currentTank.move('N');

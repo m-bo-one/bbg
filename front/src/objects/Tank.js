@@ -17,16 +17,22 @@ class Tank {
         this.turretSprite.scale.setTo(0.25, 0.25);
         this.turretSprite.anchor.setTo(0.25, 0.5);
 
+        // initialize lazer for tank
+        this.lazerSprite = this.game.add.sprite(x, y, 'lazer');
+        this.lazerSprite.scale.setTo(0.25, 0.25);
+        this.lazerSprite.anchor.setTo(0.5, 0.5);
+        this.lazerSprite.visible = false;
+
         // initialize bullets for tank
-        this.bullets = this.game.add.group();
-        this.bullets.enableBody = true;
-        this.bullets.createMultiple(data.bullets, 'bullet', 0, false);
-        this.bullets.setAll('scale.x', 0.25);
-        this.bullets.setAll('scale.y', 0.25);
-        this.bullets.setAll('anchor.x', 0.5); 
-        this.bullets.setAll('anchor.y', 0.5);
-        this.bullets.setAll('outOfBoundsKill', true);
-        this.bullets.setAll('checkWorldBounds', true);
+        // this.bullets = this.game.add.group();
+        // this.bullets.enableBody = true;
+        // this.bullets.createMultiple(data.bullets, 'bullet', 0, false);
+        // this.bullets.setAll('scale.x', 0.25);
+        // this.bullets.setAll('scale.y', 0.25);
+        // this.bullets.setAll('anchor.x', 0.5); 
+        // this.bullets.setAll('anchor.y', 0.5);
+        // this.bullets.setAll('outOfBoundsKill', true);
+        // this.bullets.setAll('checkWorldBounds', true);
 
         this.d2a = {
             [this.game.stream.proto.Direction.N]: 360,
@@ -48,8 +54,8 @@ class Tank {
     }
 
     destroy() {
-        this.bullets.callAll('kill');
-        this.bullets.destroy();
+        // this.bullets.callAll('kill');
+        // this.bullets.destroy();
         this.tankSprite.destroy();
         this.turretSprite.destroy();
     }
@@ -80,35 +86,44 @@ class Tank {
     }
 
     fire() {
-        if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0) {
-            this.nextFire = this.game.time.now + this.fireRate;
+        clearTimeout(this._shootCmd);
+        this.rotate();
+        this.lazerSprite.anchor.x = -0.25;
+        this.lazerSprite.visible = true;
+        this.lazerSprite.reset(this.turretSprite.x, this.turretSprite.y);
+        this.lazerSprite.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
+        this._shootCmd = setTimeout(() => {
+            this.lazerSprite.visible = false;
+        }, 0);
+        // this.lazerSprite.visible = false;
+        // if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0) {
+        //     this.nextFire = this.game.time.now + this.fireRate;
 
-            let bullet = this.bullets.getFirstDead();
+        //     let bullet = this.bullets.getFirstDead();
 
-            bullet.reset(this.turretSprite.x, this.turretSprite.y);
-            bullet.anchor.x = -5;
-            bullet.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
-            this.game.physics.arcade.moveToPointer(bullet, 300, 0);
-            if (this.fireRate > 30) {
-                if (this.fireRate > this.defFireRate * 0.95) {
-                    this.fireRate -= 1;
-                } else if (this.fireRate > this.defFireRate * 0.9) {
-                    this.fireRate -= 5;
-                } else {
-                    this.fireRate -= 15;
-                }
-            }
-        } 
+        //     bullet.reset(this.turretSprite.x, this.turretSprite.y);
+        //     bullet.anchor.x = -5;
+        //     bullet.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
+        //     this.game.physics.arcade.moveToPointer(bullet, 300, 0);
+        //     if (this.fireRate > 30) {
+        //         if (this.fireRate > this.defFireRate * 0.95) {
+        //             this.fireRate -= 1;
+        //         } else if (this.fireRate > this.defFireRate * 0.9) {
+        //             this.fireRate -= 5;
+        //         } else {
+        //             this.fireRate -= 15;
+        //         }
+        //     }s
+        // } 
     }
 
     set turretAngle(angle) {
+        console.log("Turret rotation: ", angle);
         this.turretSprite.rotation = angle;
     }
 
     rotate() {
-        // console.log("My calc rotation: ", Math.atan2(this.game.input.mousePointer.worldY - this.turretSprite.y, this.game.input.mousePointer.worldX - this.turretSprite.x));
         this.turretAngle = this.game.physics.arcade.angleToPointer(this.turretSprite);
-        console.log("Turret rotation: ", this.turretSprite.rotation);
         this.syncData('TankRotate', {
             x: this.x,
             y: this.y,

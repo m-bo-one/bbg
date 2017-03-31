@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/DeV1doR/bbg/server/models"
 	pb "github.com/DeV1doR/bbg/server/protobufs"
+	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
@@ -34,6 +35,12 @@ var (
 		DB:       0,
 	}
 )
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{ForceColors: true})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
 
 func RedisClient(conf *redis.Options) (*redis.Client, error) {
 	client := redis.NewClient(conf)
@@ -79,10 +86,10 @@ func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all
 	}
 
 	if all {
-		log.Printf("Mass send message: %+v \n", pbMsg)
+		log.Debugf("Mass send message: %+v \n", pbMsg)
 		c.hub.broadcast <- pbMsg
 	} else {
-		log.Printf("Single send message: %+v \n", pbMsg)
+		log.Debugf("Single send message: %+v \n", pbMsg)
 		c.send <- pbMsg
 	}
 
@@ -97,7 +104,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		}
 		pk, err := models.RemoveTank(c.redis, &c.tank.ID)
 		if err != nil {
-			log.Println("TankUreg error: ", err)
+			log.Errorln("TankUreg error: ", err)
 			return
 		}
 		c.tank = nil
@@ -110,7 +117,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		}
 		tank, err := models.NewTank(c.redis)
 		if err != nil {
-			log.Println("TankReg error: ", err)
+			log.Errorln("TankReg error: ", err)
 			return
 		}
 		c.tank = tank
@@ -121,7 +128,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 			return
 		}
 		if err := c.tank.Move(message.TankMove.Direction); err != nil {
-			log.Println(err)
+			log.Errorln(err)
 			return
 		}
 
@@ -130,7 +137,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 			return
 		}
 		if err := c.tank.TurretRotate(message.TankRotate.MouseAxes); err != nil {
-			log.Println(err)
+			log.Errorln(err)
 			return
 		}
 
@@ -150,24 +157,24 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	log.Println("STARTER readPump")
+	log.Debugln("STARTER readPump")
 	for {
-		log.Println("readPump GOGOGO")
+		log.Infoln("readPump GOGOGO")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("error: %v", err)
+				log.Errorf("error: %v \n", err)
 			}
 			break
 		}
 
 		pbMsg := &pb.BBGProtocol{}
 		if err := proto.Unmarshal(message, pbMsg); err != nil {
-			log.Println("Unmarshaling error: ", err)
+			log.Errorln("Unmarshaling error: ", err)
 			continue
 		}
 
-		log.Printf("Incomming message: %+v \n", pbMsg)
+		log.Debugf("Incomming message: %+v \n", pbMsg)
 
 		c.manageEvent(pbMsg)
 	}
@@ -177,15 +184,15 @@ func (c *Client) writePump() {
 	defer func() {
 		c.conn.Close()
 	}()
-	log.Println("STARTER writePump")
+	log.Debugln("STARTER writePump")
 	for {
 		select {
 		case message, ok := <-c.send:
-			log.Println("writePump GOGOGO")
+			log.Infoln("writePump GOGOGO")
 			if !ok {
 				// The hub closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				log.Println("Hub closed.")
+				log.Errorln("Hub closed.")
 				return
 			}
 
@@ -208,7 +215,7 @@ func (c *Client) writePump() {
 func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Errorln(err)
 		return
 	}
 	client := &Client{
@@ -225,15 +232,15 @@ func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Reque
 func main() {
 	redis, err := RedisClient(redisConf)
 	if err != nil {
-		log.Fatalln(err)
+		log.Errorln(err)
 	}
 	hub := newHub()
 	go hub.run()
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
-	log.Printf("Starting server on %s \n", *addr)
+	log.Infoln("Starting server on %s \n", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		log.Errorln("ListenAndServe: ", err)
 	}
 }
