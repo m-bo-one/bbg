@@ -154,14 +154,15 @@ function build() {
 function serve() {
     
     var options = {
-        ui: {
-            port: 4001
-        },
+        ui: false,
         port: 4000,
+        host: "127.0.0.1",
+        localOnly: true,
+        online: false,
         server: {
             baseDir: BUILD_PATH
         },
-        open: false // Change it to true if you wish to allow Browsersync to open a browser window.
+        open: "local" // Change it to true if you wish to allow Browsersync to open a browser window.
     };
     
     browserSync(options);

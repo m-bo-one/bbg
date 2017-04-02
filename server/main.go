@@ -25,7 +25,7 @@ var (
 			return true
 		},
 	}
-	addr                  = flag.String("addr", ":8888", "http service address")
+	addr                  = flag.String("addr", "127.0.0.1:8888", "http service address")
 	mutex                 = &sync.Mutex{}
 	tanks                 = make(map[uint]*models.Tank)
 	protocolVesion uint32 = 1

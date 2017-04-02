@@ -25,7 +25,7 @@ class MainState extends Phaser.State {
             SPACEBAR: Phaser.Keyboard.SPACEBAR
         });
 
-        this.game.stream = new ProtoStream(`ws://${window.location.hostname}:8888/game`);
+        this.game.stream = new ProtoStream(`ws://${window.location.hostname}/game`);
         this.game.stream.onLoadComplete(() => {
             this.game.stream.send("TankReg");
             window.onbeforeunload = () => this.game.stream.send('TankUnreg');
