@@ -25,7 +25,7 @@ var (
 			return true
 		},
 	}
-	addr                  = flag.String("addr", ":8080", "http service address")
+	addr                  = flag.String("addr", ":8888", "http service address")
 	mutex                 = &sync.Mutex{}
 	tanks                 = make(map[uint]*models.Tank)
 	protocolVesion uint32 = 1
@@ -239,7 +239,7 @@ func main() {
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
-	log.Infoln("Starting server on %s \n", *addr)
+	log.Infof("Starting server on %s \n", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Errorln("ListenAndServe: ", err)
 	}
