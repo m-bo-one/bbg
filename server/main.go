@@ -1,11 +1,9 @@
 package main
 
 import (
-	"flag"
 	"net/http"
 	"os"
 	"runtime"
-	"sync"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
 	log "github.com/Sirupsen/logrus"
@@ -18,31 +16,24 @@ const (
 )
 
 var (
-	debug                 = flag.Bool("debug", false, "debug switcher")
-	CPUCount              = flag.Int("cpu_count", 4, "CPU count")
-	addr                  = flag.String("addr", "127.0.0.1:8888", "http service address")
-	protocolVesion uint32 = 1
-
-	upgrader = websocket.Upgrader{
+	configName = os.Getenv("BBG_CONFIG")
+	appConf    = getConf(configName)
+	upgrader   = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
 	}
-	mutex     = &sync.Mutex{}
-	redisConf = &redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	}
 )
 
 func init() {
-	runtime.GOMAXPROCS(*CPUCount)
+	runtime.GOMAXPROCS(appConf.CPUCount)
+
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.TextFormatter{ForceColors: true})
-	if !*debug {
+
+	if !appConf.Debug {
 		log.SetLevel(log.ErrorLevel)
 	} else {
 		log.SetLevel(log.DebugLevel)
@@ -67,7 +58,7 @@ func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Reque
 }
 
 func main() {
-	redis, err := RedisClient(redisConf)
+	redis, err := RedisClient(appConf)
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -76,8 +67,8 @@ func main() {
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
-	log.Infof("Starting server on %s \n", *addr)
-	if err := http.ListenAndServe(*addr, nil); err != nil {
+	log.Infof("Starting server on %s \n", appConf.Addr)
+	if err := http.ListenAndServe(appConf.Addr, nil); err != nil {
 		log.Errorln("ListenAndServe: ", err)
 	}
 }

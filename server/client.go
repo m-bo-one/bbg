@@ -31,7 +31,7 @@ func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all
 	pbMsg := new(pb.BBGProtocol)
 	dict2proto := map[string]interface{}{
 		"Type":    &wsType,
-		"Version": &protocolVesion,
+		"Version": &appConf.ProtocolVersion,
 	}
 
 	if data != nil {

@@ -1,0 +1,13 @@
+{
+    "Debug": true,
+    "CPUCount": 1,
+    "Addr": "127.0.0.1:8888",
+    "ProtocolVersion": 1,
+    "Db": {
+        "Redis": {
+            "Addr": "127.0.0.1:6379",
+            "Password": "",
+            "DB": 0
+        }
+    }
+}

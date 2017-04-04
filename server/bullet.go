@@ -56,7 +56,7 @@ func (b *Bullet) OutOfBoundaries() bool {
 
 func (b *Bullet) Update(c *Client) {
 	var wg sync.WaitGroup
-	ticker := time.NewTicker(time.Second / 60)
+	ticker := time.NewTicker(time.Second / 120)
 
 	defer func() {
 		ticker.Stop()
@@ -68,10 +68,10 @@ func (b *Bullet) Update(c *Client) {
 
 	go func() {
 		defer wg.Done()
+		speed := float64(b.Speed / 10)
 		for {
 			select {
 			case <-ticker.C:
-				speed := float64(b.Speed / 10)
 				b.X += math.Cos(b.Angle) * speed
 				b.Y += math.Sin(b.Angle) * speed
 
