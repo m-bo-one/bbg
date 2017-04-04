@@ -34,8 +34,6 @@ class Tank extends BaseElement {
     }
 
     destroy() {
-        // this.bullets.callAll('kill');
-        // this.bullets.destroy();
         this.tankSprite.destroy();
         this.turretSprite.destroy();
     }
@@ -44,7 +42,6 @@ class Tank extends BaseElement {
         this.id = data.tankId;
         this.fireRate = data.fireRate;
         this.health = data.health;
-        // this.bullets = data.bullets;
         this.x = data.x;
         this.y = data.y;
         this.speed = data.speed;

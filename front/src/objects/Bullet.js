@@ -34,8 +34,21 @@ class Bullet extends BaseElement {
         this.angle = data.angle;
         this.speed = data.speed;
         this.tankId = data.tankId;
+        this.alive = data.alive;
 
-        setTimeout(() => this.destroy(), 1000);
+        if (!this.alive) {
+            this.destroy();
+        }
+
+        // setTimeout(() => this.destroy(), 1000);
+    }
+
+    get angle() {
+        return this.bulletSprite.rotation;
+    }
+
+    set angle(a) {
+        this.bulletSprite.rotation = a;
     }
 
     set direction(direction) {

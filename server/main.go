@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"runtime"
 	"sync"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
@@ -17,7 +18,11 @@ const (
 )
 
 var (
-	debug    = os.Getenv("BBG_DEBUG")
+	debug                 = flag.Bool("debug", false, "debug switcher")
+	CPUCount              = flag.Int("cpu_count", 4, "CPU count")
+	addr                  = flag.String("addr", "127.0.0.1:8888", "http service address")
+	protocolVesion uint32 = 1
+
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -25,10 +30,8 @@ var (
 			return true
 		},
 	}
-	addr                  = flag.String("addr", "127.0.0.1:8888", "http service address")
-	mutex                 = &sync.Mutex{}
-	protocolVesion uint32 = 1
-	redisConf             = &redis.Options{
+	mutex     = &sync.Mutex{}
+	redisConf = &redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
@@ -36,9 +39,14 @@ var (
 )
 
 func init() {
-	log.SetFormatter(&log.TextFormatter{ForceColors: true})
+	runtime.GOMAXPROCS(*CPUCount)
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.ErrorLevel)
+	log.SetFormatter(&log.TextFormatter{ForceColors: true})
+	if !*debug {
+		log.SetLevel(log.ErrorLevel)
+	} else {
+		log.SetLevel(log.DebugLevel)
+	}
 }
 
 func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Request) {

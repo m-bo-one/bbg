@@ -102,7 +102,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		if c.tank == nil {
 			return
 		}
-		if err := c.tank.Shoot(); err != nil {
+		if err := c.tank.Shoot(message.TankShoot.MouseAxes); err != nil {
 			log.Errorln(err)
 			return
 		}

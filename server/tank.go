@@ -22,13 +22,13 @@ type Tank struct {
 	WSClient *Client
 }
 
-func (t *Tank) Shoot() error {
+func (t *Tank) Shoot(axes *pb.MouseAxes) error {
+	t.Cmd.MouseAxes.X = *axes.X
+	t.Cmd.MouseAxes.Y = *axes.Y
 	bullet, err := NewBullet(t)
 	if err != nil {
 		return err
 	}
-	// cupd := make(chan *Bullet, t.Bullets)
-	// cupd <- bullet
 	go bullet.Update(t.WSClient)
 	return nil
 }
@@ -38,7 +38,12 @@ func (t *Tank) Stop() error {
 }
 
 func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
-	t.Cmd.Angle = math.Atan2(float64(*axes.Y-t.Cmd.Y), float64(*axes.X-t.Cmd.X))
+	t.Cmd.MouseAxes.X = *axes.X
+	t.Cmd.MouseAxes.Y = *axes.Y
+	t.Cmd.Angle = math.Atan2(
+		t.Cmd.MouseAxes.Y-float64(t.Cmd.Y),
+		t.Cmd.MouseAxes.X-float64(t.Cmd.X),
+	)
 	return nil
 }
 
@@ -85,8 +90,8 @@ func NewTank(c *Client) (*Tank, error) {
 		Bullets:  1000,
 		Speed:    5,
 		Cmd: &Cmd{
-			X:         200,
-			Y:         200,
+			X:         0,
+			Y:         0,
 			Direction: direction,
 			MouseAxes: &MouseAxes{},
 		},

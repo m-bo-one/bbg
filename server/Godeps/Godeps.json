@@ -1,0 +1,55 @@
+{
+	"ImportPath": "github.com/DeV1doR/bbg/server",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.11.5-12-g10f801e",
+			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis/internal",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis/internal/consistenthash",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis/internal/hashtag",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis/internal/pool",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/go-redis/redis/internal/proto",
+			"Comment": "v6.0.0-4-g18dcec2",
+			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
+		},
+		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.1.0-29-ga91eba7",
+			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "493114f68206f85e7e333beccfabc11e98cba8dd"
+		}
+	]
+}

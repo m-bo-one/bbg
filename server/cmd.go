@@ -5,7 +5,11 @@ import (
 )
 
 type MouseAxes struct {
-	X, Y int
+	X, Y float64
+}
+
+type Bounds struct {
+	Width, Height uint32
 }
 
 type Cmd struct {
