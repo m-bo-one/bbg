@@ -18,10 +18,10 @@ class Tank {
         this.turretSprite.anchor.setTo(0.25, 0.5);
 
         // initialize lazer for tank
-        this.lazerSprite = this.game.add.sprite(x, y, 'lazer');
-        this.lazerSprite.scale.setTo(0.25, 0.25);
-        this.lazerSprite.anchor.setTo(0.5, 0.5);
-        this.lazerSprite.visible = false;
+        // this.lazerSprite = this.game.add.sprite(x, y, 'lazer');
+        // this.lazerSprite.scale.setTo(0.25, 0.25);
+        // this.lazerSprite.anchor.setTo(0.5, 0.5);
+        // this.lazerSprite.visible = false;
 
         // initialize bullets for tank
         // this.bullets = this.game.add.group();
@@ -86,15 +86,15 @@ class Tank {
     }
 
     fire() {
-        clearTimeout(this._shootCmd);
-        this.rotate();
-        this.lazerSprite.anchor.x = -0.25;
-        this.lazerSprite.visible = true;
-        this.lazerSprite.reset(this.turretSprite.x, this.turretSprite.y);
-        this.lazerSprite.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
-        this._shootCmd = setTimeout(() => {
-            this.lazerSprite.visible = false;
-        }, 0);
+        // clearTimeout(this._shootCmd);
+        // this.rotate();
+        // this.lazerSprite.anchor.x = -0.25;
+        // this.lazerSprite.visible = true;
+        // this.lazerSprite.reset(this.turretSprite.x, this.turretSprite.y);
+        // this.lazerSprite.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
+        // this._shootCmd = setTimeout(() => {
+        //     this.lazerSprite.visible = false;
+        // }, 0);
         // this.lazerSprite.visible = false;
         // if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0) {
         //     this.nextFire = this.game.time.now + this.fireRate;
@@ -103,8 +103,10 @@ class Tank {
 
         //     bullet.reset(this.turretSprite.x, this.turretSprite.y);
         //     bullet.anchor.x = -5;
-        //     bullet.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
-        //     this.game.physics.arcade.moveToPointer(bullet, 300, 0);
+        //     bullet.rotation = this.game.physics.arcade.moveToPointer(bullet, 1000);
+        //     // bullet.body.velocity.x = 1000;
+        //     // bullet.body.velocity.y = 1000;
+
         //     if (this.fireRate > 30) {
         //         if (this.fireRate > this.defFireRate * 0.95) {
         //             this.fireRate -= 1;
@@ -113,12 +115,19 @@ class Tank {
         //         } else {
         //             this.fireRate -= 15;
         //         }
-        //     }s
-        // } 
+        //     }
+        // }
+        this.syncData('TankShoot', {
+            x: this.x,
+            y: this.y,
+            mouseAxes: {
+                x: this.game.input.mousePointer.worldX,
+                y: this.game.input.mousePointer.worldY
+            }
+        });
     }
 
     set turretAngle(angle) {
-        console.log("Turret rotation: ", angle);
         this.turretSprite.rotation = angle;
     }
 

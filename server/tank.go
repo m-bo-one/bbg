@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"math"
@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-const dbKey string = "bbg:tanks"
+const tankDbKey string = "bbg:tanks"
 
 type Tank struct {
 	ID       uint32
@@ -18,9 +18,18 @@ type Tank struct {
 	Bullets  int32
 	Speed    int32
 	Cmd      *Cmd
+
+	WSClient *Client
 }
 
 func (t *Tank) Shoot() error {
+	bullet, err := NewBullet(t)
+	if err != nil {
+		return err
+	}
+	cupd := make(chan *Bullet, t.Bullets)
+	cupd <- bullet
+	go Updator(t.WSClient, cupd)
 	return nil
 }
 
@@ -29,7 +38,6 @@ func (t *Tank) Stop() error {
 }
 
 func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
-	// Math.atan2(this.game.input.mousePointer.worldY - this.turretSprite.y, this.game.input.mousePointer.worldX - this.turretSprite.x)
 	t.Cmd.Angle = math.Atan2(float64(*axes.Y-t.Cmd.Y), float64(*axes.X-t.Cmd.X))
 	return nil
 }
@@ -64,8 +72,8 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 	}
 }
 
-func NewTank(redis *redis.Client) (*Tank, error) {
-	pk, err := redis.Incr("tanks:id").Result()
+func NewTank(c *Client) (*Tank, error) {
+	pk, err := c.redis.Incr(tankDbKey + ":id").Result()
 	if err != nil {
 		return nil, err
 	}
@@ -82,19 +90,20 @@ func NewTank(redis *redis.Client) (*Tank, error) {
 			Direction: direction,
 			MouseAxes: &MouseAxes{},
 		},
+		WSClient: c,
 	}
 	encoded, err := proto.Marshal(t.ToProtobuf())
 	if err != nil {
 		return nil, err
 	}
-	if err := redis.HSet(dbKey, strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
+	if err := c.redis.HSet(tankDbKey, strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
 		return nil, err
 	}
 	return t, nil
 }
 
 func LoadTank(redis *redis.Client, pk *uint32) (*Tank, error) {
-	val, err := redis.HGet(dbKey, strconv.Itoa(int(*pk))).Result()
+	val, err := redis.HGet(tankDbKey, strconv.Itoa(int(*pk))).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -121,10 +130,10 @@ func LoadTank(redis *redis.Client, pk *uint32) (*Tank, error) {
 	}, nil
 }
 
-func RemoveTank(redis *redis.Client, pk *uint32) (uint32, error) {
-	_, err := redis.HDel(dbKey, strconv.Itoa(int(*pk))).Result()
+func RemoveTank(c *Client) (uint32, error) {
+	_, err := c.redis.HDel(tankDbKey, strconv.Itoa(int(c.tank.ID))).Result()
 	if err != nil {
 		return 0, err
 	}
-	return *pk, nil
+	return c.tank.ID, nil
 }

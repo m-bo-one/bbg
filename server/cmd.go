@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	pb "github.com/DeV1doR/bbg/server/protobufs"

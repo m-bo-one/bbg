@@ -1,0 +1,82 @@
+syntax = "proto2";
+
+package bbg2;
+
+enum MsgType {
+    TankUpdate = 10;
+    BulletUpdate = 11;
+
+    TankReceive = 20;
+}
+
+enum Direction {
+    N = 1;
+    S = 2;
+    E = 3;
+    W = 4;
+}
+
+enum TankEvent {
+    Create = 1;
+    Destroy = 2;
+    Move = 3;
+    Shoot = 4;
+}
+
+message TankRecieve {
+
+    message MouseAxes {
+
+        required int32 x = 1;
+        required int32 y = 2;
+    }
+
+    required uint32 id = 1;
+    required int32 x = 2;
+    required int32 y = 3;
+    required MouseAxes mouseAxes = 4;
+    required Direction direction = 5;
+    required TankEvent tankEvent = 6;
+
+    optional uint32 tankId = 10;
+    optional uint32 prevId = 20;
+}
+
+message TankUpdate {
+
+    required uint32 id = 1;
+    required uint32 tankId = 2;
+    required int32 x = 3;
+    required int32 y = 4;
+    required int32 health = 5;
+    optional int32 fireRate = 6;
+    optional int32 bullets = 7;
+    optional int32 speed = 8;
+    required Direction direction = 9;
+    required double angle = 10;
+    required TankEvent tankEvent = 11;
+
+    optional uint32 prevId = 20;
+}
+
+message BulletUpdate {
+
+    required uint32 id = 1;
+    required uint32 tankId = 2;
+    required int32 x = 3;
+    required int32 y = 4;
+    required double angle = 5;
+    required uint32 speed = 6;
+    optional uint32 prevId = 20;
+}
+
+message BBGProtocol {
+
+    required MsgType type = 1;
+    required uint32 version = 2;
+
+    optional TankUpdate tankUpdate = 10;
+    optional BulletUpdate bulletUpdate = 11;
+
+    optional TankRecieve tankReceive = 20;
+}

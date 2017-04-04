@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package proto;
+package bbg1;
 
 enum Direction {
     N = 1;
@@ -55,6 +55,24 @@ message TankUpdate {
 message TankRemove {
     required uint32 id = 1;
     required uint32 tankId = 2;
+    optional uint32 prevId = 20;
+}
+
+message TankShoot {
+    required uint32 id = 1;
+    required int32 x = 2;
+    required int32 y = 3;
+    required MouseAxes mouseAxes = 4;
+    optional uint32 prevId = 20;
+}
+
+message BulletUpdate {
+    required uint32 id = 1;
+    required uint32 tankId = 2;
+    required int32 x = 3;
+    required int32 y = 4;
+    required double angle = 5;
+    required int32 speed = 6;
 }
 
 message BBGProtocol {
@@ -67,6 +85,8 @@ message BBGProtocol {
         TankUnreg = 5;
         TankRemove = 6;
         TankRotate = 7;
+        TankShoot = 8;
+        BulletUpdate = 9;
         UnhandledType = 10;
 
         Ping = 100;
@@ -81,6 +101,8 @@ message BBGProtocol {
     optional TankUpdate tankNew = 13;
     optional TankRemove tankRemove = 14;
     optional TankRotate tankRotate = 15;
+    optional TankShoot tankShoot = 16;
+    optional BulletUpdate bulletUpdate = 20;
 
     optional bool ping = 100;
     optional bool pong = 101;

@@ -25,10 +25,14 @@ class MainState extends Phaser.State {
             SPACEBAR: Phaser.Keyboard.SPACEBAR
         });
 
-        this.game.stream = new ProtoStream(`ws://${window.location.hostname}/game`);
+        let port = (this.game.DEBUG) ? ':8888' : '';
+
+        this.game.stream = new ProtoStream(`ws://${window.location.hostname}${port}/game`);
         this.game.stream.onLoadComplete(() => {
             this.game.stream.send("TankReg");
-            window.onbeforeunload = () => this.game.stream.send('TankUnreg');
+            window.addEventListener(helpers.isDeviceMobile() ? "pagehide" : "beforeunload", (e) => {
+                this.game.stream.send('TankUnreg')
+            });
         });
     }
 
@@ -67,15 +71,17 @@ class MainState extends Phaser.State {
         let pData = data[helpers.toFirstLowerCase(kData)];
         if (typeof pData === 'undefined') return;
 
+        console.log('Received message: ', pData)
+
         switch(data.type) {
             case stream.pbProtocol.Type.TankNew:
                 if (!this.tanks.hasOwnProperty(pData.tankId)) {
                     console.log('Creating new tank...');
                     this.tanks[pData.tankId] = new Tank(this.game, pData, 'tank', 'gun-turret');
                     this.currentTank = this.tanks[pData.tankId];
-                    this.game.input.keyboard.onUpCallback = (e) => {
-                        this.currentTank.fireRate = this.currentTank.defFireRate;
-                    };
+                    // this.game.input.keyboard.onUpCallback = (e) => {
+                    //     this.currentTank.fireRate = this.currentTank.defFireRate;
+                    // };
                     let callback = this.currentTank.rotate.bind(this.currentTank);
                     this.game.input.addMoveCallback(callback);
                 }
@@ -101,6 +107,11 @@ class MainState extends Phaser.State {
                         let keyboard = this.game.input.keyboard;
                         keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
                     }
+                }
+                break;
+            case stream.pbProtocol.Type.BulletUpdate:
+                if (this.tanks.hasOwnProperty(pData.tankId)) {
+                    console.log(`Update bullet position...`);
                 }
                 break;
             case stream.pbProtocol.Type.UnhandledType:
