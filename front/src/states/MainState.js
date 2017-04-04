@@ -1,4 +1,5 @@
 import Tank from 'objects/Tank';
+import Bullet from 'objects/Bullet';
 import ProtoStream from 'utils/ws';
 import * as helpers from 'utils/helpers';
 
@@ -111,7 +112,15 @@ class MainState extends Phaser.State {
                 break;
             case stream.pbProtocol.Type.BulletUpdate:
                 if (this.tanks.hasOwnProperty(pData.tankId)) {
-                    console.log(`Update bullet position...`);
+                    let tank = this.tanks[pData.tankId];
+                    let bullet;
+                    if (tank.bullets.hasOwnProperty(pData.id)) {
+                        console.log(`Update bullet position...`);
+                        tank.bullets[pData.id].update(pData);
+                    } else {
+                        console.log(`Creating new bullet...`);
+                        new Bullet(this.game, pData, 'bullet', tank);
+                    }
                 }
                 break;
             case stream.pbProtocol.Type.UnhandledType:

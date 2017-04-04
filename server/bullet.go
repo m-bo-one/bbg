@@ -1,10 +1,11 @@
 package main
 
 import (
+	"math/rand"
 	"sync/atomic"
+	"time"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
-	log "github.com/Sirupsen/logrus"
 )
 
 var bulletIDCounter uint32
@@ -40,17 +41,38 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	}
 }
 
-func (b *Bullet) Update() error {
-	return nil
-}
-
-func Updator(c *Client, updator chan *Bullet) {
-	select {
-	case bullet := <-updator:
-		if err := bullet.Update(); err != nil {
-			log.Errorln("Bullet Updator error: ", err)
+func (b *Bullet) Update(c *Client) {
+	ticker := time.NewTicker(time.Second / 25)
+	done := make(chan struct{})
+	defer close(done)
+	for {
+		select {
+		case <-ticker.C:
+			if b.X >= 1000 {
+				done <- struct{}{}
+			} else {
+				b.X += rand.Int31n(100)
+				c.sendProtoData(pb.BBGProtocol_BulletUpdate, b.ToProtobuf(), true)
+			}
+		case <-done:
+			ticker.Stop()
 			return
 		}
-		c.sendProtoData(pb.BBGProtocol_BulletUpdate, bullet.ToProtobuf(), true)
 	}
 }
+
+// func Updator(c *Client, updator chan *Bullet) {
+// 	ticker := time.Tick(100 * time.Millisecond)
+// 	for sec := range ticker {
+// 		select {
+// 		case bullet := <-updator:
+// 			log.Errorf("%v\n", sec)
+// 			if err := bullet.Update(); err != nil {
+// 				log.Errorln("Bullet Updator error: ", err)
+// 				return
+// 			}
+// 			c.sendProtoData(pb.BBGProtocol_BulletUpdate, bullet.ToProtobuf(), true)
+// 			updator <- bullet
+// 		}
+// 	}
+// }

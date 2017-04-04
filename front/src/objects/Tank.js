@@ -1,8 +1,10 @@
-class Tank {
+import BaseElement from 'objects/BaseElement';
+
+class Tank extends BaseElement {
 
     constructor(game, data, tankKey, turretKey) {
+        super(game, data);
         let x = data.x, y = data.y;
-        this.game = game;
         this.tankSprite = this.game.add.sprite(x, y, tankKey);
 
         this.nextFire = 0;
@@ -17,36 +19,14 @@ class Tank {
         this.turretSprite.scale.setTo(0.25, 0.25);
         this.turretSprite.anchor.setTo(0.25, 0.5);
 
-        // initialize lazer for tank
-        // this.lazerSprite = this.game.add.sprite(x, y, 'lazer');
-        // this.lazerSprite.scale.setTo(0.25, 0.25);
-        // this.lazerSprite.anchor.setTo(0.5, 0.5);
-        // this.lazerSprite.visible = false;
-
-        // initialize bullets for tank
-        // this.bullets = this.game.add.group();
-        // this.bullets.enableBody = true;
-        // this.bullets.createMultiple(data.bullets, 'bullet', 0, false);
-        // this.bullets.setAll('scale.x', 0.25);
-        // this.bullets.setAll('scale.y', 0.25);
-        // this.bullets.setAll('anchor.x', 0.5); 
-        // this.bullets.setAll('anchor.y', 0.5);
-        // this.bullets.setAll('outOfBoundsKill', true);
-        // this.bullets.setAll('checkWorldBounds', true);
-
-        this.d2a = {
-            [this.game.stream.proto.Direction.N]: 360,
-            [this.game.stream.proto.Direction.S]: 180,
-            [this.game.stream.proto.Direction.E]: 90,
-            [this.game.stream.proto.Direction.W]: -90,
-        }
-
         this.update(data);
 
         this.cmdId = 1;
         this.defFireRate = this.fireRate;
 
         this.eventType = this.game.stream.pbProtocol.Type;
+
+        this.bullets = {};
     }
 
     getSprite() {
@@ -86,16 +66,6 @@ class Tank {
     }
 
     fire() {
-        // clearTimeout(this._shootCmd);
-        // this.rotate();
-        // this.lazerSprite.anchor.x = -0.25;
-        // this.lazerSprite.visible = true;
-        // this.lazerSprite.reset(this.turretSprite.x, this.turretSprite.y);
-        // this.lazerSprite.rotation = this.game.physics.arcade.angleToPointer(this.turretSprite);
-        // this._shootCmd = setTimeout(() => {
-        //     this.lazerSprite.visible = false;
-        // }, 0);
-        // this.lazerSprite.visible = false;
         // if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0) {
         //     this.nextFire = this.game.time.now + this.fireRate;
 
@@ -143,13 +113,6 @@ class Tank {
         });
     }
 
-    set direction(direction) {
-        if (this.game.stream.proto.Direction.hasOwnProperty(direction)) {
-            direction = this.game.stream.proto.Direction[direction];
-        }
-        this.tankSprite.angle = this.d2a[direction];
-    }
-
     move(direction) {
         switch(direction) {
             case 'N':
@@ -179,20 +142,20 @@ class Tank {
     }
 
     get x() {
-        return this.tankSprite.x;
-    }
-
-    set x(coord) {
-        this.tankSprite.x = coord;
-        this.turretSprite.x = coord;
+        return super.x;
     }
 
     get y() {
-        return this.tankSprite.y;
+        return super.y;
+    }
+
+    set x(coord) {
+        super.x = coord;
+        this.turretSprite.x = coord;
     }
 
     set y(coord) {
-        this.tankSprite.y = coord;
+        super.y = coord;
         this.turretSprite.y = coord;
     }
 

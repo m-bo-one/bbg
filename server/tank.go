@@ -27,9 +27,9 @@ func (t *Tank) Shoot() error {
 	if err != nil {
 		return err
 	}
-	cupd := make(chan *Bullet, t.Bullets)
-	cupd <- bullet
-	go Updator(t.WSClient, cupd)
+	// cupd := make(chan *Bullet, t.Bullets)
+	// cupd <- bullet
+	go bullet.Update(t.WSClient)
 	return nil
 }
 
@@ -82,7 +82,7 @@ func NewTank(c *Client) (*Tank, error) {
 		ID:       uint32(pk),
 		Health:   100,
 		FireRate: 100,
-		Bullets:  100,
+		Bullets:  1000,
 		Speed:    5,
 		Cmd: &Cmd{
 			X:         200,

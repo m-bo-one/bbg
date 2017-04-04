@@ -38,7 +38,7 @@ var (
 func init() {
 	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.ErrorLevel)
 }
 
 func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Request) {
