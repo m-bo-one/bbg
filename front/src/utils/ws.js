@@ -17,7 +17,8 @@ class ProtoStream {
                 throw new Error('Proto WS supports only protobuf message type.')
             }
         };
-        this._ws.onclose = () => {
+        this._ws.onclose = (e) => {
+            console.log('ws closed', e);
             console.log('restarting...');
             try {
                 setTimeout(() => {

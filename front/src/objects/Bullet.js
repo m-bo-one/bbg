@@ -16,6 +16,14 @@ class Bullet extends BaseElement {
         this.update(data);
 
         this.tank.bullets[this.id] = this;
+
+        this._worker = setInterval(() => this.gcCleaner(), 1000);
+    }
+
+    gcCleaner() {
+        if (!this.alive || Math.floor(Date.now() / 1000) > this.updatedAt + 2) {
+            this.destroy();
+        }
     }
 
     getSprite() {
@@ -23,6 +31,7 @@ class Bullet extends BaseElement {
     }
 
     destroy() {
+        clearInterval(this._worker);
         this.bulletSprite.destroy();
         delete this.tank.bullets[this.id];
     }
@@ -35,12 +44,11 @@ class Bullet extends BaseElement {
         this.speed = data.speed;
         this.tankId = data.tankId;
         this.alive = data.alive;
+        this.updatedAt = Math.floor(Date.now() / 1000);
 
         if (!this.alive) {
             this.destroy();
         }
-
-        // setTimeout(() => this.destroy(), 1000);
     }
 
     get angle() {

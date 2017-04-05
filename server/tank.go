@@ -3,6 +3,8 @@ package main
 import (
 	"math"
 	"strconv"
+	"sync"
+	"time"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
 	"github.com/go-redis/redis"
@@ -10,6 +12,8 @@ import (
 )
 
 const tankDbKey string = "bbg:tanks"
+
+var mutex = &sync.Mutex{}
 
 type Tank struct {
 	ID       uint32
@@ -19,17 +23,29 @@ type Tank struct {
 	Speed    int32
 	Cmd      *Cmd
 
+	LastShoot int64
+
 	WSClient *Client
 }
 
 func (t *Tank) Shoot(axes *pb.MouseAxes) error {
-	t.Cmd.MouseAxes.X = *axes.X
-	t.Cmd.MouseAxes.Y = *axes.Y
-	bullet, err := NewBullet(t)
-	if err != nil {
-		return err
+	mutex.Lock()
+	{
+		if time.Now().UTC().Unix() > t.LastShoot {
+			// if t.FireRate != -100 {
+			// 	t.FireRate -= 10
+			// }
+			t.LastShoot = time.Now().UTC().Unix()
+			t.Cmd.MouseAxes.X = *axes.X
+			t.Cmd.MouseAxes.Y = *axes.Y
+			bullet, err := NewBullet(t)
+			if err != nil {
+				return err
+			}
+			go bullet.Update(t.WSClient)
+		}
 	}
-	go bullet.Update(t.WSClient)
+	mutex.Unlock()
 	return nil
 }
 

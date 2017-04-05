@@ -11,9 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	maxMessageSize = 512
-)
+const TickRate = 100
 
 var (
 	configName = os.Getenv("BBG_CONFIG")

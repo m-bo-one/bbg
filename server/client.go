@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+)
+
+const (
+	maxMessageSize = 1024
+	pongWait       = 60 * time.Second
 )
 
 type Client struct {
@@ -123,12 +129,13 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
+	// c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	for {
 		log.Infoln("readPump GOGOGO")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Errorf("error: %v \n", err)
+				log.Errorf("error: %v", err)
 			}
 			break
 		}

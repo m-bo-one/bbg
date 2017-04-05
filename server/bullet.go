@@ -28,7 +28,7 @@ func NewBullet(tank *Tank) (*Bullet, error) {
 		TankID: tank.ID,
 		X:      float64(tank.Cmd.X),
 		Y:      float64(tank.Cmd.Y),
-		Speed:  tank.FireRate,
+		Speed:  1000,
 		Angle:  tank.Cmd.Angle,
 		Alive:  true,
 	}, nil
@@ -56,7 +56,7 @@ func (b *Bullet) OutOfBoundaries() bool {
 
 func (b *Bullet) Update(c *Client) {
 	var wg sync.WaitGroup
-	ticker := time.NewTicker(time.Second / 120)
+	ticker := time.NewTicker(time.Second / TickRate)
 
 	defer func() {
 		ticker.Stop()
@@ -68,12 +68,12 @@ func (b *Bullet) Update(c *Client) {
 
 	go func() {
 		defer wg.Done()
-		speed := float64(b.Speed / 10)
+		speed := float64(b.Speed)
 		for {
 			select {
 			case <-ticker.C:
-				b.X += math.Cos(b.Angle) * speed
-				b.Y += math.Sin(b.Angle) * speed
+				b.X += math.Cos(b.Angle) * (speed / TickRate)
+				b.Y += math.Sin(b.Angle) * (speed / TickRate)
 
 				if b.OutOfBoundaries() {
 					b.Alive = false

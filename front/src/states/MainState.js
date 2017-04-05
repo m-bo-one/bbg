@@ -39,7 +39,7 @@ class MainState extends Phaser.State {
 
     update() {
         if (!this.currentTank) return;
-        if (this.cursors.SPACEBAR.isDown) this.currentTank.fire()
+        if (this.cursors.SPACEBAR.isDown) this.currentTank.fire();
         switch(true) {
             case this.cursors.W.isDown:
                 this.currentTank.move('N');

@@ -1,5 +1,5 @@
 {
-    "Debug": true,
+    "Debug": false,
     "CPUCount": 1,
     "Addr": "127.0.0.1:8888",
     "ProtocolVersion": 1,
