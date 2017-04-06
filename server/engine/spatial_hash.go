@@ -3,8 +3,6 @@ package engine
 import (
 	"math"
 	"sync"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 type object interface {
@@ -36,7 +34,6 @@ func (sh *SpatialHash) Get(key int32) ([]object, bool) {
 	defer sh.RUnlock()
 
 	value, ok := sh.Objects[key]
-
 	return value, ok
 }
 
@@ -77,20 +74,18 @@ func (sh *SpatialHash) HashIds(o object) []int32 {
 func (sh *SpatialHash) Add(o object) {
 	ids := sh.HashIds(o)
 	for _, id := range ids {
-		if objects, ok := sh.Get(id); ok {
-			sh.Set(id, append(objects, o))
-		}
+		objects, _ := sh.Get(id)
+		sh.Set(id, append(objects, o))
 	}
 }
 
 func (sh *SpatialHash) Remove(o object) {
 	ids := sh.HashIds(o)
 	for _, id := range ids {
-		if objects, ok := sh.Get(id); ok {
-			for j, other := range objects {
-				if o == other {
-					sh.Set(id, append(objects[:j], objects[j+1:]...))
-				}
+		objects, _ := sh.Get(id)
+		for j, other := range objects {
+			if o == other {
+				sh.Set(id, append(objects[:j], objects[j+1:]...))
 			}
 		}
 	}
@@ -100,7 +95,6 @@ func (sh *SpatialHash) Update(o object, f func()) {
 	sh.Remove(o)
 	{
 		f()
-		log.Debugf("Debug spatial HashMap: %+v \n", sh)
 	}
 	sh.Add(o)
 }
@@ -120,11 +114,10 @@ func (sh *SpatialHash) Nearby(o object) []object {
 	}
 
 	for _, id := range ids {
-		if objects, ok := sh.Get(id); ok {
-			for _, object := range objects {
-				if object != o {
-					newObjs = _append(newObjs, object)
-				}
+		objects, _ := sh.Get(id)
+		for _, object := range objects {
+			if object != o {
+				newObjs = _append(newObjs, object)
 			}
 		}
 	}

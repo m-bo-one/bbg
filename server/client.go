@@ -109,7 +109,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 			return
 		}
 		if err := c.tank.Shoot(message.TankShoot.MouseAxes); err != nil {
-			log.Errorln(err)
+			log.Errorln("Shoot error: ", err)
 			return
 		}
 
@@ -117,6 +117,8 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		c.sendProtoData(pb.BBGProtocol_UnhandledType, nil, false)
 		return
 	}
+
+	// log.Errorln(runtime.NumGoroutine())
 
 	if c.tank != nil {
 		c.sendProtoData(pb.BBGProtocol_TankUpdate, c.tank.ToProtobuf(), true)

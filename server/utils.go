@@ -3,7 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
+	"sync/atomic"
+	"unsafe"
 )
 
 func Keys(v interface{}) ([]string, error) {
@@ -44,4 +47,19 @@ func FillStruct(m map[string]interface{}, s interface{}) error {
 		structFieldValue.Set(val)
 	}
 	return nil
+}
+
+func AddFloat64(val *float64, delta float64) (new float64) {
+	for {
+		old := *val
+		new = old + delta
+		if atomic.CompareAndSwapUint64(
+			(*uint64)(unsafe.Pointer(val)),
+			math.Float64bits(old),
+			math.Float64bits(new),
+		) {
+			break
+		}
+	}
+	return
 }

@@ -27,14 +27,17 @@ func getConf(configName string) *conf {
 		configName = "developer"
 		log.Printf("Settings file not found. use %s. \n", configName)
 	}
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(pwd)
+	}
 	fileName := strings.Join([]string{
-		os.Getenv("GOPATH"),
-		"/src/",
-		"github.com/DeV1doR/bbg",
-		"/server/conf/",
+		pwd,
+		"/conf/",
 		configName,
 		".json",
 	}, "")
+	log.Printf("Use %s settings file. \n", fileName)
 	c := &conf{}
 	jsonFile, err := ioutil.ReadFile(fileName)
 	if err != nil {

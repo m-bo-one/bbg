@@ -8,25 +8,35 @@ import (
 	"time"
 
 	pb "github.com/DeV1doR/bbg/server/protobufs"
+	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"
 )
 
-const tankDbKey string = "bbg:tanks"
+const (
+	tankDbKey       string = "bbg:tanks"
+	bulletsToReload        = 3
+)
 
-var tLock = &sync.Mutex{}
+type TGun struct {
+	Damage          uint32
+	Bullets         int32
+	needRecharge    bool
+	reloaderStarted bool
+}
 
 type Tank struct {
 	ID            uint32
 	Health        int32
 	FireRate      int32
-	Bullets       int32
 	Speed         int32
-	Damage        uint32
 	Width, Height uint32
 	LastShoot     int64
 	Cmd           *Cmd
 	WSClient      *Client
+
+	TGun
+	sync.Mutex
 }
 
 func (t *Tank) GetX() int32 {
@@ -46,18 +56,59 @@ func (t *Tank) GetDamage(d int32) error {
 	return nil
 }
 
+func (t *Tank) restoreBullet() bool {
+	log.Debugf("Bullets: %+v, bulletsToReload: %+v, Need recharge: %+v \n", t.Bullets, bulletsToReload, !t.needRecharge)
+	if t.isFullReloaded() {
+		t.needRecharge = false
+		return true
+	}
+	atomic.AddInt32(&t.Bullets, 1)
+	return false
+}
+
+func (t *Tank) reloader() {
+	if t.reloaderStarted {
+		return
+	}
+	t.reloaderStarted = true
+	ticker := time.NewTicker(TickRate * time.Millisecond)
+	defer func() {
+		ticker.Stop()
+		t.reloaderStarted = false
+	}()
+	for {
+		select {
+		case <-ticker.C:
+			if ok := t.restoreBullet(); ok {
+				return
+			}
+		}
+	}
+}
+
+func (t *Tank) isFullReloaded() bool {
+	return t.Bullets == bulletsToReload
+}
+
 func (t *Tank) Shoot(axes *pb.MouseAxes) error {
-	// if time.Now().UTC().Unix() > t.LastShoot {
+	if t.Bullets == 0 && !t.needRecharge {
+		t.needRecharge = true
+		return nil
+	} else if t.needRecharge {
+		return nil
+	}
+	atomic.AddInt32(&t.Bullets, -1)
 	t.LastShoot = time.Now().UTC().Unix()
 	t.Cmd.MouseAxes.X = *axes.X
 	t.Cmd.MouseAxes.Y = *axes.Y
-	// }
 
 	bullet, err := NewBullet(t)
 	if err != nil {
+		atomic.AddInt32(&t.Bullets, 1)
 		return err
 	}
 	go bullet.Update(t.WSClient)
+	go t.reloader()
 	return nil
 }
 
@@ -76,18 +127,23 @@ func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 }
 
 func (t *Tank) Move(direction *pb.Direction) error {
-	t.Cmd.Direction = *direction
 	world.Update(t, func() {
-		switch *direction {
-		case pb.Direction_N:
-			t.Cmd.Y -= t.Speed
-		case pb.Direction_S:
-			t.Cmd.Y += t.Speed
-		case pb.Direction_E:
-			t.Cmd.X += t.Speed
-		case pb.Direction_W:
-			t.Cmd.X -= t.Speed
+		t.Lock()
+		{
+			t.Cmd.Direction = *direction
+
+			switch t.Cmd.Direction {
+			case pb.Direction_N:
+				t.Cmd.Y -= t.Speed
+			case pb.Direction_S:
+				t.Cmd.Y += t.Speed
+			case pb.Direction_E:
+				t.Cmd.X += t.Speed
+			case pb.Direction_W:
+				t.Cmd.X -= t.Speed
+			}
 		}
+		t.Unlock()
 	})
 	return nil
 }
@@ -118,15 +174,17 @@ func NewTank(c *Client) (*Tank, error) {
 		ID:       uint32(pk),
 		Health:   100,
 		FireRate: 100,
-		Bullets:  1000,
 		Speed:    5,
-		Width:    10,
-		Height:   10,
-		Damage:   10,
+		Width:    15,
+		Height:   15,
 		WSClient: c,
+		TGun: TGun{
+			Bullets: bulletsToReload,
+			Damage:  10,
+		},
 		Cmd: &Cmd{
-			X:         0,
-			Y:         0,
+			X:         MapWidth / 2,
+			Y:         MapHeight / 2,
 			Direction: direction,
 			MouseAxes: &MouseAxes{},
 		},
@@ -156,17 +214,17 @@ func LoadTank(redis *redis.Client, pk *uint32) (*Tank, error) {
 		ID:       *pbMsg.TankId,
 		Health:   *pbMsg.Health,
 		FireRate: *pbMsg.FireRate,
-		Bullets:  *pbMsg.Bullets,
 		Speed:    *pbMsg.Speed,
+		TGun: TGun{
+			Bullets: *pbMsg.Bullets,
+			Damage:  *pbMsg.Damage,
+		},
 		Cmd: &Cmd{
 			X:         *pbMsg.X,
 			Y:         *pbMsg.Y,
 			Direction: *pbMsg.Direction,
 			Angle:     *pbMsg.Angle,
-			MouseAxes: &MouseAxes{
-				X: 0,
-				Y: 0,
-			},
+			MouseAxes: &MouseAxes{},
 		},
 	}, nil
 }
