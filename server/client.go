@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	maxMessageSize = 1024
+	maxMessageSize = 8192
 	pongWait       = 60 * time.Second
 )
 
