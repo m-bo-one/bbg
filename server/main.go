@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/DeV1doR/bbg/server/engine"
 	pb "github.com/DeV1doR/bbg/server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -15,6 +16,7 @@ const (
 	TickRate  = 100
 	MapWidth  = 1024
 	MapHeight = 768
+	CellSize  = 10
 )
 
 var (
@@ -27,6 +29,7 @@ var (
 			return true
 		},
 	}
+	world = engine.NewSpatialHash(MapWidth, MapHeight, CellSize)
 )
 
 func init() {

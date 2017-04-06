@@ -47,6 +47,7 @@ class Tank extends BaseElement {
         this.speed = data.speed;
         this.direction = data.direction;
         this.turretAngle = data.angle;
+        this.damage = data.damage;
     }
 
     syncData(type, data) {
@@ -99,6 +100,7 @@ class Tank extends BaseElement {
     }
 
     rotate() {
+        if (!this.game.input.mousePointer.withinGame) return;
         this.turretAngle = this.game.physics.arcade.angleToPointer(this.turretSprite);
         this.syncData('TankRotate', {
             x: this.x,
@@ -111,6 +113,7 @@ class Tank extends BaseElement {
     }
 
     move(direction) {
+        this.rotate();
         switch(direction) {
             case 'N':
                 this.y -= this.speed;

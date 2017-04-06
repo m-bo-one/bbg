@@ -48,6 +48,7 @@ message TankUpdate {
     required Direction direction = 9;
     optional Status status = 10;
     required double angle = 11;
+    required uint32 damage = 12;
 
     optional uint32 prevId = 20;
 }

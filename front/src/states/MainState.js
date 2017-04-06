@@ -81,9 +81,6 @@ class MainState extends Phaser.State {
                     console.log('Creating new tank...');
                     this.tanks[pData.tankId] = new Tank(this.game, pData, 'tank', 'gun-turret');
                     this.currentTank = this.tanks[pData.tankId];
-                    // this.game.input.keyboard.onUpCallback = (e) => {
-                    //     this.currentTank.fireRate = this.currentTank.defFireRate;
-                    // };
                     let callback = this.currentTank.rotate.bind(this.currentTank);
                     this.game.input.addMoveCallback(callback);
                 }
