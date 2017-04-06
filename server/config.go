@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 )
 
@@ -31,8 +33,9 @@ func getConf(configName string) *conf {
 	if err != nil {
 		log.Fatalln(pwd)
 	}
-	fileName := strings.Join([]string{
-		pwd,
+	_, fileName, _, _ := runtime.Caller(1)
+	fileName = strings.Join([]string{
+		path.Dir(fileName),
 		"/conf/",
 		configName,
 		".json",
