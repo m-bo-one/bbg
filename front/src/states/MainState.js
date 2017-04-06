@@ -25,6 +25,7 @@ class MainState extends Phaser.State {
             D: Phaser.Keyboard.D,
             SPACEBAR: Phaser.Keyboard.SPACEBAR
         });
+        this.game.time.advancedTiming = true; // enable FPS
 
         let port = (this.game.DEBUG) ? ':8888' : '';
 
@@ -60,9 +61,9 @@ class MainState extends Phaser.State {
 
     render() {
         if (!this.currentTank) return;
-        this.game.debug.text(this.game.time.fps || '--', 2, 14, "#00ff00");
+        this.game.debug.text(`FPS: ${this.game.time.fps}`, 2, 14, "#00ff00");
         this.game.debug.text(`HP: ${this.currentTank.health}`, 2, 14 * 2, "#00ff00");
-        this.game.debug.text(`Fire Rate: ${this.currentTank.fireRate}`, 2, 14 * 3, "#00ff00");
+        // this.game.debug.text(`Fire Rate: ${this.currentTank.fireRate}`, 2, 14 * 3, "#00ff00");
         this.game.debug.spriteInfo(this.currentTank.getSprite(), 640, 14);
     }
 

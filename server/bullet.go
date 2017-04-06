@@ -28,7 +28,7 @@ func NewBullet(tank *Tank) (*Bullet, error) {
 		TankID: tank.ID,
 		X:      float64(tank.Cmd.X),
 		Y:      float64(tank.Cmd.Y),
-		Speed:  1000,
+		Speed:  10,
 		Angle:  tank.Cmd.Angle,
 		Alive:  true,
 	}, nil
@@ -48,7 +48,7 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 
 func (b *Bullet) OutOfBoundaries() bool {
 	// Hardcoded
-	if 0 < b.X && b.X < 1024 && 10 < b.Y && b.Y < 768 {
+	if 0 < b.X && b.X < MapWidth && 0 < b.Y && b.Y < MapHeight {
 		return false
 	}
 	return true
@@ -72,8 +72,8 @@ func (b *Bullet) Update(c *Client) {
 		for {
 			select {
 			case <-ticker.C:
-				b.X += math.Cos(b.Angle) * (speed / TickRate)
-				b.Y += math.Sin(b.Angle) * (speed / TickRate)
+				b.X += math.Cos(b.Angle) * speed
+				b.Y += math.Sin(b.Angle) * speed
 
 				if b.OutOfBoundaries() {
 					b.Alive = false

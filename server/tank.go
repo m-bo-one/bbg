@@ -32,9 +32,6 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 	mutex.Lock()
 	{
 		if time.Now().UTC().Unix() > t.LastShoot {
-			// if t.FireRate != -100 {
-			// 	t.FireRate -= 10
-			// }
 			t.LastShoot = time.Now().UTC().Unix()
 			t.Cmd.MouseAxes.X = *axes.X
 			t.Cmd.MouseAxes.Y = *axes.Y

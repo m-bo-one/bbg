@@ -11,7 +11,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const TickRate = 100
+const (
+	TickRate  = 100
+	MapWidth  = 1024
+	MapHeight = 768
+)
 
 var (
 	configName = os.Getenv("BBG_CONFIG")
