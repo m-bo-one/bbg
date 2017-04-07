@@ -11,7 +11,7 @@ class ProtoStream {
 
         this._ws.onmessage = (e) => {
             if (e.data instanceof ArrayBuffer) {
-                let bytearray = new Uint8Array(event.data);
+                let bytearray = new Uint8Array(e.data);
                 this.onmessage(bytearray);
             } else {
                 throw new Error('Proto WS supports only protobuf message type.')
