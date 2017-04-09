@@ -29,6 +29,9 @@ class ProtoStream {
                 console.log('failed, trying again...');
             }
         };
+        this._ws.onerror = (e) => {
+            console.log(e);
+        };
         this.loadProtos({
             'bbg1': {
                 'enum': [
