@@ -140,6 +140,9 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		return
 	}
 
+	log.Debugf("Incomming message: %+v \n", message)
+	log.Errorf("TANK: %+v \n", c.tank)
+
 	// log.Errorln(runtime.NumGoroutine())
 
 	if c.tank != nil {
@@ -168,8 +171,6 @@ func (c *Client) readPump() {
 			log.Errorln("Unmarshaling error: ", err)
 			continue
 		}
-
-		log.Debugf("Incomming message: %+v \n", pbMsg)
 
 		log.Debugln("readPump - reading...")
 		c.manageEvent(pbMsg)

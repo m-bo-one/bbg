@@ -27,6 +27,7 @@ class Game extends Phaser.Game {
         delete this.currentTank;
         let keyboard = this.input.keyboard;
         keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
+        game.input.moveCallbacks = [];
     }
 }
 

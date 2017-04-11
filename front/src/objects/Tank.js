@@ -34,7 +34,9 @@ class Tank extends BaseElement {
             console.log('Creating new tank...');
             game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
             game.currentTank = game.tanks[data.tankId];
+
             let callback = game.currentTank.rotate.bind(game.currentTank);
+
             game.input.addMoveCallback(callback);
         }
     }
@@ -52,14 +54,16 @@ class Tank extends BaseElement {
     static wsRemove(game, data) {
         if (game.tanks.hasOwnProperty(data.tankId)) {
             console.log(`Removing tank ID:${data.tankId}...`);
-            game.tanks[data.tankId].destroy();
-            delete game.tanks[data.tankId];
 
-            if (game.currentTank.id == data.tankId) {
-                game.currentTank.destroy();
-                delete game.currentTank;
+            if (game.currentTank && game.currentTank.id == data.tankId) {
+                // game.currentTank.destroy();
+                // delete game.currentTank;
                 let keyboard = game.input.keyboard;
                 keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
+                game.input.moveCallbacks = [];
+            } else {
+                game.tanks[data.tankId].destroy();
+                delete game.tanks[data.tankId];
             }
         }
     }

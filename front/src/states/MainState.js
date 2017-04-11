@@ -57,7 +57,6 @@ class MainState extends Phaser.State {
         if (!this.game.currentTank) return;
         this.game.debug.text(`FPS: ${this.game.time.fps}`, 2, 14, "#00ff00");
         this.game.debug.text(`HP: ${this.game.currentTank.health}`, 2, 14 * 2, "#00ff00");
-        // this.game.debug.text(`Fire Rate: ${this.game.currentTank.fireRate}`, 2, 14 * 3, "#00ff00");
         this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
     }
 
