@@ -1,10 +1,24 @@
 import * as protobuf from "../../node_modules/protobufjs/index.js";
+import * as helpers from 'utils/helpers';
 
 class ProtoStream {
 
     constructor(url, ...args) {
+        game.flushMap();
+
         this._ws = new WebSocket(url, ...args);
         this._ws.binaryType = "arraybuffer";
+
+        this.onLoadComplete(() => {
+            this.send("TankReg");
+            let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
+            let callback = (e) => {
+                window.removeEventListener(callbackType, callback);
+                this.send('TankUnreg');
+            };
+            window.addEventListener(callbackType, callback);
+        });
+
         this._ws.onopen = () => {
             console.log('open');
         };
@@ -23,14 +37,14 @@ class ProtoStream {
             try {
                 setTimeout(() => {
                     game.stream = new ProtoStream(url, ...args);
-                    game.stream._proto = this._proto;
+                    console.log('successfully restarted.');
                 }, 2000);
             } catch (e) {
                 console.log('failed, trying again...');
             }
         };
         this._ws.onerror = (e) => {
-            console.log(e);
+            console.log('ws error', e);
         };
         this.loadProtos({
             'bbg1': {

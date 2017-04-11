@@ -77,6 +77,11 @@ message BulletUpdate {
     required bool alive = 7;
 }
 
+message MapUpdate {
+    repeated TankUpdate tanks = 1;
+    repeated BulletUpdate bullets = 2;
+}
+
 message BBGProtocol {
 
     enum Type {
@@ -89,7 +94,9 @@ message BBGProtocol {
         TankRotate = 7;
         TankShoot = 8;
         BulletUpdate = 9;
-        UnhandledType = 10;
+        MapUpdate = 10;
+
+        UnhandledType = 99;
 
         Ping = 100;
         Pong = 101;
@@ -105,6 +112,7 @@ message BBGProtocol {
     optional TankRotate tankRotate = 15;
     optional TankShoot tankShoot = 16;
     optional BulletUpdate bulletUpdate = 20;
+    optional MapUpdate mapUpdate = 30;
 
     optional bool ping = 100;
     optional bool pong = 101;

@@ -29,6 +29,41 @@ class Tank extends BaseElement {
         this.bullets = {};
     }
 
+    static wsCreate(game, data) {
+        if (!game.tanks.hasOwnProperty(data.tankId)) {
+            console.log('Creating new tank...');
+            game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
+            game.currentTank = game.tanks[data.tankId];
+            let callback = game.currentTank.rotate.bind(game.currentTank);
+            game.input.addMoveCallback(callback);
+        }
+    }
+
+    static wsUpdate(game, data) {
+        console.log('Receive tank update. Applying...');
+        if (!game.tanks.hasOwnProperty(data.tankId)) {
+            console.log('Creating new tank...');
+            game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
+        } else {
+            game.tanks[data.tankId].update(data);
+        }
+    }
+
+    static wsRemove(game, data) {
+        if (game.tanks.hasOwnProperty(data.tankId)) {
+            console.log(`Removing tank ID:${data.tankId}...`);
+            game.tanks[data.tankId].destroy();
+            delete game.tanks[data.tankId];
+
+            if (game.currentTank.id == data.tankId) {
+                game.currentTank.destroy();
+                delete game.currentTank;
+                let keyboard = game.input.keyboard;
+                keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
+            }
+        }
+    }
+
     getSprite() {
         return this.tankSprite;
     }
@@ -64,27 +99,6 @@ class Tank extends BaseElement {
     }
 
     fire() {
-        // if (this.game.time.now > this.nextFire && this.bullets.countDead() > 0) {
-        //     this.nextFire = this.game.time.now + this.fireRate;
-
-        //     let bullet = this.bullets.getFirstDead();
-
-        //     bullet.reset(this.turretSprite.x, this.turretSprite.y);
-        //     bullet.anchor.x = -5;
-        //     bullet.rotation = this.game.physics.arcade.moveToPointer(bullet, 1000);
-        //     // bullet.body.velocity.x = 1000;
-        //     // bullet.body.velocity.y = 1000;
-
-        //     if (this.fireRate > 30) {
-        //         if (this.fireRate > this.defFireRate * 0.95) {
-        //             this.fireRate -= 1;
-        //         } else if (this.fireRate > this.defFireRate * 0.9) {
-        //             this.fireRate -= 5;
-        //         } else {
-        //             this.fireRate -= 15;
-        //         }
-        //     }
-        // }
         this.syncData('TankShoot', {
             x: this.x,
             y: this.y,
@@ -131,6 +145,10 @@ class Tank extends BaseElement {
                 return;
         }
         this.direction = direction;
+
+        if (this.game.currentTank == this) {
+            this.game.camera.focusOnXY(this.x, this.y);
+        }
 
         this.syncData('TankMove', {
             direction: this.game.stream.proto.Direction[direction]

@@ -15,7 +15,7 @@ class MainState extends Phaser.State {
     create() {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.stage.backgroundColor = "#DDDDDD";
-        this.tanks = {};
+        this.game.tanks = {};
         this.game.tanksGroup = this.game.add.group();
 
         this.cursors = this.game.input.keyboard.addKeys({
@@ -30,96 +30,66 @@ class MainState extends Phaser.State {
         let port = (this.game.DEBUG) ? ':8888' : '';
 
         this.game.stream = new ProtoStream(`ws://${window.location.hostname}${port}/game`);
-        this.game.stream.onLoadComplete(() => {
-            this.game.stream.send("TankReg");
-            window.addEventListener(helpers.isDeviceMobile() ? "pagehide" : "beforeunload", (e) => {
-                this.game.stream.send('TankUnreg')
-            });
-        });
     }
 
     update() {
-        if (!this.currentTank) return;
-        if (this.cursors.SPACEBAR.isDown) this.currentTank.fire();
+        if (!this.game.currentTank) return;
+        if (this.cursors.SPACEBAR.isDown) this.game.currentTank.fire();
         switch(true) {
             case this.cursors.W.isDown:
-                this.currentTank.move('N');
+                this.game.currentTank.move('N');
                 break;
             case this.cursors.S.isDown:
-                this.currentTank.move('S');
+                this.game.currentTank.move('S');
                 break;
             case this.cursors.D.isDown:
-                this.currentTank.move('E');
+                this.game.currentTank.move('E');
                 break;
             case this.cursors.A.isDown:
-                this.currentTank.move('W');
+                this.game.currentTank.move('W');
                 break;
             default:
-                this.currentTank.stop();
+                this.game.currentTank.stop();
         }
     }
 
     render() {
-        if (!this.currentTank) return;
+        if (!this.game.currentTank) return;
         this.game.debug.text(`FPS: ${this.game.time.fps}`, 2, 14, "#00ff00");
-        this.game.debug.text(`HP: ${this.currentTank.health}`, 2, 14 * 2, "#00ff00");
-        // this.game.debug.text(`Fire Rate: ${this.currentTank.fireRate}`, 2, 14 * 3, "#00ff00");
-        this.game.debug.spriteInfo(this.currentTank.getSprite(), 640, 14);
+        this.game.debug.text(`HP: ${this.game.currentTank.health}`, 2, 14 * 2, "#00ff00");
+        // this.game.debug.text(`Fire Rate: ${this.game.currentTank.fireRate}`, 2, 14 * 3, "#00ff00");
+        this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
     }
 
     wsUpdate(data) {
         let stream = this.game.stream;
         let kData = helpers.getKeyByValue(stream.pbProtocol.Type, data.type);
         let pData = data[helpers.toFirstLowerCase(kData)];
+
         if (typeof pData === 'undefined') return;
 
         console.log('Received message: ', pData)
 
         switch(data.type) {
-            case stream.pbProtocol.Type.TankNew:
-                if (!this.tanks.hasOwnProperty(pData.tankId)) {
-                    console.log('Creating new tank...');
-                    this.tanks[pData.tankId] = new Tank(this.game, pData, 'tank', 'gun-turret');
-                    this.currentTank = this.tanks[pData.tankId];
-                    let callback = this.currentTank.rotate.bind(this.currentTank);
-                    this.game.input.addMoveCallback(callback);
+            case stream.pbProtocol.Type.MapUpdate:
+                switch(true) {
+                    case Array.isArray(pData.tanks):
+                        pData.tanks.forEach(dData => Tank.wsUpdate(game, dData));
+                    case Array.isArray(pData.bullets):
+                        pData.bullets.forEach(dData => Bullet.wsUpdate(game, dData));
                 }
+                break;
+            case stream.pbProtocol.Type.TankNew:
+                Tank.wsCreate(game, pData);
                 break;
             case stream.pbProtocol.Type.TankUpdate:
-                console.log('Receive tank update. Applying...');
-                if (!this.tanks.hasOwnProperty(pData.tankId)) {
-                    console.log('Creating new tank...');
-                    this.tanks[pData.tankId] = new Tank(this.game, pData, 'tank', 'gun-turret');
-                } else {
-                    this.tanks[pData.tankId].update(pData);
-                }
+                Tank.wsUpdate(game, pData);
                 break;
             case stream.pbProtocol.Type.TankRemove:
-                if (this.tanks.hasOwnProperty(pData.tankId)) {
-                    console.log(`Removing tank ID:${pData.tankId}...`);
-                    this.tanks[pData.tankId].destroy();
-                    delete this.tanks[pData.tankId];
-
-                    if (this.currentTank.id == pData.tankId) {
-                        this.currentTank.destroy();
-                        delete this.currentTank;
-                        let keyboard = this.game.input.keyboard;
-                        keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
-                    }
-                }
+                Tank.wsRemove(game, pData);
                 break;
             case stream.pbProtocol.Type.BulletUpdate:
-                if (this.tanks.hasOwnProperty(pData.tankId)) {
-                    let tank = this.tanks[pData.tankId];
-                    let bullet;
-                    if (tank.bullets.hasOwnProperty(pData.id)) {
-                        console.log(`Update bullet position...`);
-                        tank.bullets[pData.id].update(pData);
-                    } else {
-                        console.log(`Creating new bullet...`);
-                        new Bullet(this.game, pData, 'bullet', tank);
-                    }
-                }
+                Bullet.wsUpdate(game, pData);
                 break;
             case stream.pbProtocol.Type.UnhandledType:
                 console.log('Unhandled type receive. Data: ', data);

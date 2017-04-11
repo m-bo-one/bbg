@@ -33,6 +33,20 @@ type Client struct {
 	tank *Tank
 }
 
+func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
+	for client, active := range hub.clients {
+		if active && client.tank != nil {
+			tanks = append(tanks, client.tank.ToProtobuf())
+		}
+	}
+	return
+}
+
+func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
+	// TODO
+	return
+}
+
 func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all bool) error {
 	pbMsg := new(pb.BBGProtocol)
 	dict2proto := map[string]interface{}{
@@ -57,6 +71,13 @@ func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all
 	}
 
 	return nil
+}
+
+func (c *Client) mapToProtobuf() *pb.MapUpdate {
+	return &pb.MapUpdate{
+		Tanks:   getTanksToProtobuf(c.hub),
+		Bullets: getBulletsToProtobuf(c.hub),
+	}
 }
 
 func (c *Client) manageEvent(message *pb.BBGProtocol) {
@@ -85,6 +106,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 		}
 		c.tank = tank
 		c.sendProtoData(pb.BBGProtocol_TankNew, c.tank.ToProtobuf(), false)
+		c.sendProtoData(pb.BBGProtocol_MapUpdate, c.mapToProtobuf(), false)
 
 	case pb.BBGProtocol_TankMove:
 		if c.tank == nil {
@@ -131,7 +153,6 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	// c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	for {
 		log.Infoln("readPump GOGOGO")
 		_, message, err := c.conn.ReadMessage()
@@ -159,13 +180,14 @@ func (c *Client) writePump() {
 	defer func() {
 		c.conn.Close()
 	}()
-	log.Debugln("STARTER writePump")
 	for {
 		select {
 		case message, ok := <-c.send:
+			log.Debugln("STARTER writePump")
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				msg := "Hub closed."
+				c.conn.WriteMessage(websocket.CloseMessage, []byte(msg))
 				log.Errorln("Hub closed.")
 				return
 			}

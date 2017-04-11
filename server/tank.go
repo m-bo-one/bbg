@@ -175,8 +175,8 @@ func NewTank(c *Client) (*Tank, error) {
 		Health:   100,
 		FireRate: 100,
 		Speed:    5,
-		Width:    15,
-		Height:   15,
+		Width:    10,
+		Height:   10,
 		WSClient: c,
 		TGun: TGun{
 			Bullets: bulletsToReload,
