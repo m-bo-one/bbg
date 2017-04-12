@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/gorilla/mux"
+
 	"github.com/DeV1doR/bbg/server/engine"
 	pb "github.com/DeV1doR/bbg/server/protobufs"
 	log "github.com/Sirupsen/logrus"
@@ -67,13 +69,16 @@ func main() {
 	if err != nil {
 		log.Errorln(err)
 	}
+
 	hub := newHub()
 	go hub.run()
-	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
+
+	rtr := mux.NewRouter()
+	rtr.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
+	rtr.HandleFunc("/login/{social:[a-z]+}/", serveSocial).Methods("GET")
+
 	log.Infof("Starting server on %s \n", appConf.Addr)
-	if err := http.ListenAndServe(appConf.Addr, nil); err != nil {
-		log.Errorln("ListenAndServe: ", err)
-	}
+	log.Errorln(http.ListenAndServe(appConf.Addr, rtr))
 }

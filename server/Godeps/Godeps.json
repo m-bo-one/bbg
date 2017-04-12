@@ -43,6 +43,16 @@
 			"Rev": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317"
 		},
 		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.3.0-5-g599cba5",
+			"Rev": "599cba5e7b6137d46ddf58fb1765f5d928e69604"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Comment": "v1.1.0-29-ga91eba7",
 			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
