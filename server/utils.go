@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"reflect"
 	"sync/atomic"
 	"unsafe"
@@ -62,4 +63,8 @@ func AddFloat64(val *float64, delta float64) (new float64) {
 		}
 	}
 	return
+}
+
+func random(min, max float64) float64 {
+	return rand.Float64()*(max-min) + min
 }

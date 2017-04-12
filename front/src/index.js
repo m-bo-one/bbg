@@ -1,3 +1,4 @@
+import GameState from 'states/GameState';
 import MainState from 'states/MainState';
 
 class Game extends Phaser.Game {
@@ -5,8 +6,10 @@ class Game extends Phaser.Game {
 	constructor() {
 		super(1024, 768, Phaser.CANVAS, 'content', null);
         this.DEBUG = true;
-		this.state.add('MainState', MainState, false);
-		this.state.start('MainState');
+        this.state.add('MainState', MainState, false);
+		this.state.add('GameState', GameState, false);
+        this.state.start('MainState');
+		// this.state.start('GameState');
 	}
 
     create() {

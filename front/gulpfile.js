@@ -32,7 +32,7 @@ var keepFiles = false;
  * Simple way to check for development/production mode.
  */
 function isProduction() {
-    return argv.production;
+    return (typeof(argv.production) !== 'undefined') ? true : false;
 }
 
 /**
@@ -125,7 +125,7 @@ function build() {
     return browserify({
             paths: [path.join(__dirname, 'src')],
             entries: ENTRY_FILE,
-            debug: true,
+            debug: !isProduction(),
             transform: [
                 [
                     babelify, {
@@ -166,6 +166,8 @@ function serve() {
     };
     
     browserSync(options);
+
+    if (isProduction()) return;
     
     // Watches for changes in files inside the './src' folder.
     gulp.watch(SOURCE_PATH + '/**/*.js', ['watch-js']);
@@ -189,9 +191,12 @@ gulp.task('updateGoProtobuf', ['copyProtobuf'], updateGoProtobuf);
 gulp.task('build', ['updateGoProtobuf'], build);
 gulp.task('fastBuild', build);
 gulp.task('serve', ['build'], serve);
-gulp.task('watch-js', ['fastBuild'], browserSync.reload); // Rebuilds and reloads the project when executed.
-gulp.task('watch-static', ['copyPhaser'], browserSync.reload);
-gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf'], browserSync.reload);
+
+if (!isProduction()) {
+    gulp.task('watch-js', ['fastBuild'], browserSync.reload); // Rebuilds and reloads the project when executed.
+    gulp.task('watch-static', ['copyPhaser'], browserSync.reload);
+    gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf'], browserSync.reload);
+}
 
 /**
  * The tasks are executed in the following order:

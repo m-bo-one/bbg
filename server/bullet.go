@@ -77,8 +77,6 @@ func (b *Bullet) Update(c *Client) {
 		select {
 		case <-ticker.C:
 			world.Update(b, func() {
-				b.Lock()
-				defer b.Unlock()
 				b.X += math.Cos(b.Angle) * speed
 				b.Y += math.Sin(b.Angle) * speed
 			})
@@ -116,7 +114,7 @@ func NewBullet(tank *Tank) (*Bullet, error) {
 		TankID: tank.ID,
 		X:      float64(tank.Cmd.X),
 		Y:      float64(tank.Cmd.Y),
-		Speed:  10,
+		Speed:  8,
 		Angle:  tank.Cmd.Angle,
 		Alive:  true,
 	}
