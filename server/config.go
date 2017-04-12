@@ -21,6 +21,7 @@ type conf struct {
 	Addr            string
 	ProtocolVersion uint32
 	SecretKey       string
+	ProxyHost       string
 	Db              struct {
 		Redis struct {
 			Addr     string

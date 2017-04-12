@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	redistore "gopkg.in/boj/redistore.v1"
+
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/go-redis/redis"
@@ -21,4 +23,8 @@ func RedisClient(appConf *conf) (*redis.Client, error) {
 	}
 	log.Println("STARTER redis client")
 	return client, nil
+}
+
+func RedisStore(appConf *conf) (*redistore.RediStore, error) {
+	return redistore.NewRediStore(10, "tcp", appConf.Db.Redis.Addr, "", []byte(appConf.SecretKey))
 }

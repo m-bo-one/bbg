@@ -2,8 +2,9 @@
     "Debug": true,
     "CPUCount": 0,
     "Addr": "127.0.0.1:8888",
+    "ProxyHost": "localhost:4000",
     "ProtocolVersion": 1,
-    "SecretKey": "test",
+    "SecretKey": "1321nh6_bn%#l9cn68m0b=a_$0$8&=-r-#a-o&rbb6z##5u6p8^fwg3432",
     "Db": {
         "Redis": {
             "Addr": "127.0.0.1:6379",
