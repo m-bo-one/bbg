@@ -10,5 +10,15 @@
             "Password": "",
             "DB": 0
         }
+    },
+    "Oauth2": {
+        "Facebook": {
+            "ClientID": "1889193731363904",
+            "ClientSecret": "c1d6142b3480369d49300c67f0fb3694"
+        },
+        "Github": {
+            "ClientID": "60420cfc2819316cdbc6",
+            "ClientSecret": "4d4abefbe9567eb52d09d1d74692fbec489324de"
+        }
     }
 }

@@ -19,14 +19,14 @@ var (
 	store      = sessions.NewCookieStore([]byte(appConf.SecretKey))
 	oauth2conf = map[string]*oauth2.Config{
 		"github": &oauth2.Config{
-			ClientID:     "60420cfc2819316cdbc6",
-			ClientSecret: "4d4abefbe9567eb52d09d1d74692fbec489324de",
+			ClientID:     appConf.Oauth2.Github.ClientID,
+			ClientSecret: appConf.Oauth2.Github.ClientSecret,
 			RedirectURL:  prepareRedirectURL("github"),
 			Endpoint:     github.Endpoint,
 		},
 		"facebook": &oauth2.Config{
-			ClientID:     "1889193731363904",
-			ClientSecret: "c1d6142b3480369d49300c67f0fb3694",
+			ClientID:     appConf.Oauth2.Facebook.ClientID,
+			ClientSecret: appConf.Oauth2.Facebook.ClientSecret,
 			RedirectURL:  prepareRedirectURL("facebook"),
 			Endpoint:     facebook.Endpoint,
 		},
