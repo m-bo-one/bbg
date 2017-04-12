@@ -15,6 +15,7 @@ type conf struct {
 	CPUCount        int
 	Addr            string
 	ProtocolVersion uint32
+	SecretKey       string
 	Db              struct {
 		Redis struct {
 			Addr     string

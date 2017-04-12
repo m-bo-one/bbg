@@ -168,9 +168,8 @@ function serve() {
     if (!isProduction()) {
         options.middleware = [
             function(req, res, next) {
-                se = req.url.match(/\/login\/(.*)/)
-                if (se && se.length > 1) {
-                    res.writeHead(302, {'Location': 'http://127.0.0.1:8888' + req.url});
+                if (req.url.match(/\/login\/(.*)\//) || req.url.match(/\/login\/(.*)\/callback\//)) {
+                    res.writeHead(301, {'Location': 'http://127.0.0.1:8888' + req.url});
                     res.end();
                 } else {
                     next();

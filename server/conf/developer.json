@@ -3,6 +3,7 @@
     "CPUCount": 0,
     "Addr": "127.0.0.1:8888",
     "ProtocolVersion": 1,
+    "SecretKey": "test",
     "Db": {
         "Redis": {
             "Addr": "127.0.0.1:6379",

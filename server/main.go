@@ -74,10 +74,12 @@ func main() {
 	go hub.run()
 
 	rtr := mux.NewRouter()
+	rtr.StrictSlash(true)
 	rtr.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
-	rtr.HandleFunc("/login/{social:[a-z]+}/", serveSocial).Methods("GET")
+	rtr.HandleFunc("/login/{social:[a-z]+}", serveSocialLogin).Methods("GET")
+	rtr.HandleFunc("/login/{social:[a-z]+}/callback", serveSocialLoginCallback).Methods("GET")
 
 	log.Infof("Starting server on %s \n", appConf.Addr)
 	log.Errorln(http.ListenAndServe(appConf.Addr, rtr))

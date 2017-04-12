@@ -6,7 +6,8 @@ class MainState extends Phaser.State {
     }
 
     create() {
-        this.stage.backgroundColor = "#DDDDDD";
+        this.stage.backgroundColor = "#ffffff";
+        this.game.canvas.style.border = "1px solid black";
         this.buttonGroup = this.game.add.group();
 
         let offset = this.game.world.centerY;
@@ -29,7 +30,7 @@ class MainState extends Phaser.State {
 
     socialButtonCreate(x, y, name, scale=0.5) {
         let callback = () => {
-            console.log(`login/${name}/`);
+            window.open(`login/${name}/`);
         };
         let icon = this.game.add.button(x, y, name, callback, this, 2, 1, 0);
         icon.scale.setTo(scale);

@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/DeV1doR/bbg/server",
-	"GoVersion": "go1.6",
+	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Deps": [
 		{
@@ -53,9 +53,39 @@
 			"Rev": "599cba5e7b6137d46ddf58fb1765f5d928e69604"
 		},
 		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Comment": "v1.1-6-ge59506c",
+			"Rev": "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983"
+		},
+		{
+			"ImportPath": "github.com/gorilla/sessions",
+			"Comment": "v1.1-5-gba78acc",
+			"Rev": "ba78acc856fe7c79891d516131b3d903cc8d9367"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Comment": "v1.1.0-29-ga91eba7",
 			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "d1e1b351919c6738fdeb9893d5c998b161464f0c"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2",
+			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/facebook",
+			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/github",
+			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/internal",
+			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",

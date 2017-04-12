@@ -14,7 +14,8 @@ class GameState extends Phaser.State {
 
     create() {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
-        this.stage.backgroundColor = "#DDDDDD";
+        this.stage.backgroundColor = "#ffffff";
+        this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
         this.game.tanksGroup = this.game.add.group();
 
