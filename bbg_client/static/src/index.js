@@ -1,19 +1,17 @@
 import GameState from 'states/GameState';
 import MainState from 'states/MainState';
+import MenuState from 'states/MenuState';
 
 class Game extends Phaser.Game {
 
-	constructor() {
-		super(1024, 768, Phaser.CANVAS, 'content', null);
+    constructor() {
+        super(1024, 768, Phaser.CANVAS, 'content', null);
         this.state.add('MainState', MainState, false);
-		this.state.add('GameState', GameState, false);
-        if (predefinedVars.userData !== null) {
-            this.state.start('GameState');
-        } else {
-            this.state.start('MainState');
-        }
-		// this.state.start('GameState');
-	}
+        this.state.add('MenuState', MenuState, false);
+        this.state.add('GameState', GameState, false);
+
+        (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
+    }
 
     create() {
         this.world.setBounds(0, 0, 2000, 2000);

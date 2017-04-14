@@ -20,14 +20,6 @@ class MainState extends Phaser.State {
         this.socialButtonCreate(this.game.world.centerX, offset + 40, 'facebook');
     }
 
-    update() {
-
-    }
-
-    render() {
-
-    }
-
     socialButtonCreate(x, y, name, scale=0.5) {
         let callback = () => {
             window.location.href = predefinedVars.socialAuthURL[name];

@@ -17,9 +17,11 @@
                 github: "{% url "social:begin" "github" %}",
             },
             debug: {{ debug|yesno:"true,false" }},
-            userData:
+            currentUser:
             {% if user.is_authenticated %}
-                {}
+                {
+                    token: "{{ user.auth_token.key }}"
+                }
             {% else %}
                 null
             {% endif %}

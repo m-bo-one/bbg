@@ -58,20 +58,7 @@ class ProtoStream {
                     'TankShoot',
                     'BulletUpdate',
                 ],
-            },
-            // 'bbg2': {
-            //     'enum': [
-            //         'MsgType',
-            //         'Direction',
-            //         'TankEvent'
-            //     ],
-            //     'type': [
-            //         'BBGProtocol',
-            //         'TankRecieve',
-            //         'TankUpdate',
-            //         'BulletUpdate',
-            //     ],
-            // }
+            }
         })
     }
 
