@@ -1,5 +1,5 @@
-front/node_modules/
-front/build/
+node_modules/
+build/
 tmp/
 *.log
 *.tmp

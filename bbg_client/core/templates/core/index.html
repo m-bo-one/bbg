@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>BBG</title>
+	<link rel="stylesheet" href="{% static 'styles/main.css' %}" type="text/css">
+</head>
+<body>
+	<div id="content"></div>
+    <script type="text/javascript">
+        var predefinedVars = {
+            wsURL: "{{ BBG_WS_URL }}",
+            staticURL: "{{ STATIC_URL }}",
+            socialAuthURL: {
+                facebook: "{% url "social:begin" "facebook" %}",
+                github: "{% url "social:begin" "github" %}",
+            },
+            debug: {{ debug|yesno:"true,false" }},
+            userData:
+            {% if user.is_authenticated %}
+                {}
+            {% else %}
+                null
+            {% endif %}
+        };
+    </script>
+    <script src="{% static 'build/scripts/phaser.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'build/scripts/game.js' %}" type="text/javascript"></script>
+</body>
+</html>
