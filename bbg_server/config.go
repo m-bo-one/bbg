@@ -10,11 +10,6 @@ import (
 	"strings"
 )
 
-type socialConf struct {
-	ClientID     string
-	ClientSecret string
-}
-
 type conf struct {
 	Debug           bool
 	CPUCount        int
@@ -28,10 +23,6 @@ type conf struct {
 			Password string
 			DB       int
 		}
-	}
-	Oauth2 struct {
-		Facebook socialConf
-		Github   socialConf
 	}
 }
 

@@ -5,8 +5,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/gorilla/mux"
-
 	"github.com/DeV1doR/bbg/bbg_server/engine"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
@@ -77,34 +75,14 @@ func main() {
 	}
 	defer redis.Close()
 
-	// Initialize redis session cookie backend
-	store, err := RedisStore(appConf)
-	if err != nil {
-		log.Errorln(err)
-		return
-	}
-	defer store.Close()
-
 	// Initialize web socket hub
 	hub := newHub()
 	go hub.run()
 
-	// Create new http router
-	rtr := mux.NewRouter()
-	rtr.StrictSlash(true)
-
-	rtr.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, redis, w, r)
 	})
 
-	rtr.HandleFunc("/login/{social:[a-z]+}", func(w http.ResponseWriter, r *http.Request) {
-		serveSocialLogin(store, w, r)
-	}).Methods("GET")
-
-	rtr.HandleFunc("/login/{social:[a-z]+}/callback", func(w http.ResponseWriter, r *http.Request) {
-		serveSocialLoginCallback(store, w, r)
-	}).Methods("GET")
-
 	log.Infof("Starting server on %s \n", appConf.Addr)
-	log.Errorln(http.ListenAndServe(appConf.Addr, rtr))
+	log.Errorln(http.ListenAndServe(appConf.Addr, nil))
 }

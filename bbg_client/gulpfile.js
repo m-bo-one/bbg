@@ -89,14 +89,14 @@ function copyProtobuf() {
 function updateGoProtobuf() {
     // golang
     exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs')
-    del([SERVER_PATH.substr(2) + '/protobufs/**/*.*']);
+    // del([SERVER_PATH.substr(2) + '/protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
          '--go_out=' + SERVER_PATH.substr(2) + '/protobufs')
 
     // python
     exec('mkdir -p protobufs')
-    del(['protobufs/**/*.*']);
+    // del(['protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
          '--python_out=protobufs')

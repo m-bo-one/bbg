@@ -214,6 +214,25 @@ REST_FRAMEWORK = {
 
 JSON_API_FORMAT_KEYS = 'dasherize'
 
+GAME_CONFIG = {
+    'MAP': {
+        'width': 1024,
+        'height': 768,
+    },
+    'TANK_DEFAULT': {
+        'health': 100,
+        'speed': 5,
+        'fire_rate': 100,
+        'width': 10,
+        'height': 10,
+        'gun': {
+            'damage': 10,
+            'bullets': 3,
+        },
+        'direction': 'N'
+    }
+}
+
 try:
     from settings_local import *
 except ImportError:

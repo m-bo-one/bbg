@@ -29,6 +29,25 @@ message TankMove {
     optional uint32 prevId = 20;
 }
 
+message TankGun {
+    required uint32 bullets = 1;
+    required uint32 damage = 2;
+}
+
+message Tank {
+    required uint32 id = 1;
+    required int32 x = 2;
+    required int32 y = 3;
+    required int32 health = 4;
+    required int32 fireRate = 5;
+    required TankGun gun = 6;
+    required int32 speed = 7;
+    required Direction direction = 8;
+    required uint32 width = 9;
+    required uint32 height = 10;
+}
+
+
 message TankUpdate {
 
     enum Status {

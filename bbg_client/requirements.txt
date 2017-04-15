@@ -1,6 +1,7 @@
 ansicolors==1.0.2
 appdirs==1.4.3
 Babel==2.4.0
+beautifulsoup4==4.5.3
 closure==20161201
 configparser==3.5.0
 decorator==4.0.11
@@ -16,6 +17,8 @@ djangorestframework==3.6.2
 djangorestframework-jsonapi==2.1.1
 env-tools==2.0.0
 futures==3.0.5
+google==1.9.3
+gunicorn==19.7.1
 httplib2==0.10.3
 inflection==0.3.1
 ipdb==0.10.2
@@ -30,6 +33,7 @@ pexpect==4.2.1
 pickleshare==0.7.4
 ply==3.10
 prompt-toolkit==1.0.14
+protobuf==3.2.0
 psutil==4.3.0
 ptyprocess==0.5.1
 Pygments==2.2.0

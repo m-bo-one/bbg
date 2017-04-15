@@ -141,9 +141,6 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 	}
 
 	log.Debugf("Incomming message: %+v \n", message)
-	log.Errorf("TANK: %+v \n", c.tank)
-
-	// log.Errorln(runtime.NumGoroutine())
 
 	if c.tank != nil {
 		c.sendProtoData(pb.BBGProtocol_TankUpdate, c.tank.ToProtobuf(), true)
