@@ -3,7 +3,7 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 
-	pb "github.com/DeV1doR/bbg/protobufs"
+	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 )
 
 // hub maintains the set of active clients and broadcasts messages to the

@@ -16,13 +16,26 @@ var exec = require('child_process').exec;
 /**
  * Using different folders/file names? Change these constants:
  */
-var SERVER_PATH = './../server';
-var PHASER_PATH = './node_modules/phaser/build/';
-var BUILD_PATH = './build';
-var SCRIPTS_PATH = './static/build/scripts';
-var SOURCE_PATH = './static/src';
-var STATIC_PATH = './static';
-var PROTO_PATH = './static/protobufs';
+
+// Node modules
+var PHASER_PATH = './node_modules/phaser/build';
+var BOOTSTRAP_PATH = './node_modules/bootstrap/dist/css';
+
+// App pathes
+var SERVER_PATH = './../bbg_server';
+var DJANGO_PATH = './';
+
+// Static path
+var STATIC_URL = 'www/bbgdev1.ga';
+var STATIC_PATH = './static/bbg_client';
+var BUILD_PATH = './../' + STATIC_URL;
+
+var SCRIPTS_PATH = BUILD_PATH + '/build';
+var CSS_PATH = SCRIPTS_PATH;
+
+var SOURCE_PATH = './static/bbg_client/js';
+var PROTO_PATH = './../protobufs';
+
 var ENTRY_FILE = SOURCE_PATH + '/index.js';
 var OUTPUT_FILE = 'game.js';
 
@@ -56,19 +69,10 @@ function logBuildMode() {
  */
 function cleanBuild() {
     if (!keepFiles) {
-        del(['build/**/*.*']);
+        del([BUILD_PATH.substr(2) + '/build/**/*.*']);
     } else {
         keepFiles = false;
     }
-}
-
-/**
- * Copies the content of the './static' folder into the '/build' folder.
- * Check out README.md for more info on the '/static' folder.
- */
-function copyStatic() {
-    return gulp.src(STATIC_PATH + '/**/*')
-        .pipe(gulp.dest(BUILD_PATH));
 }
 
 /**
@@ -76,35 +80,47 @@ function copyStatic() {
  */
 function copyProtobuf() {
     return gulp.src(PROTO_PATH + '/**/*')
-        .pipe(gulp.dest(BUILD_PATH + PROTO_PATH.substr(1)));
+        .pipe(gulp.dest(BUILD_PATH + PROTO_PATH.substr(4)));
 }
 
 /**
  * Update Go protobufs
  */
 function updateGoProtobuf() {
-    del([SERVER_PATH + PROTO_PATH.substr(1) + '/**/*.*']);
-    return exec('protoc protobufs/*.proto --go_out=../server');
+    // golang
+    exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs')
+    del([SERVER_PATH.substr(2) + '/protobufs/**/*.*']);
+    exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
+         '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
+         '--go_out=' + SERVER_PATH.substr(2) + '/protobufs')
+
+    // python
+    exec('mkdir -p protobufs')
+    del(['protobufs/**/*.*']);
+    exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
+         '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
+         '--python_out=protobufs')
 }
 
-/**
- * Copies required Phaser files from the './node_modules/Phaser' folder into the './build/scripts' folder.
- * This way you can call 'npm update', get the lastest Phaser version and use it on your project with ease.
- */
-function copyPhaser() {
+function copyJS() {
 
-    var srcList = ['phaser.min.js'];
-    
-    if (!isProduction()) {
-        srcList.push('phaser.map', 'phaser.js');
-    }
-    
-    srcList = srcList.map(function(file) {
-        return PHASER_PATH + file;
-    });
+    var srcList = [
+        PHASER_PATH + '/phaser.min.js',
+    ];
         
     return gulp.src(srcList)
         .pipe(gulp.dest(SCRIPTS_PATH));
+
+}
+
+function copyCSS() {
+
+    var cssList = [
+        BOOTSTRAP_PATH + '/bootstrap.min.css',
+    ];
+
+    return gulp.src(cssList)
+        .pipe(gulp.dest(CSS_PATH));
 
 }
 
@@ -121,9 +137,8 @@ function build() {
 
     var sourcemapPath = SCRIPTS_PATH + '/' + OUTPUT_FILE + '.map';
     logBuildMode();
-
     return browserify({
-            paths: [path.join(__dirname, 'static/src')],
+            paths: [path.join(__dirname, 'static/bbg_client/js')],
             entries: ENTRY_FILE,
             debug: !isProduction(),
             transform: [
@@ -158,26 +173,12 @@ function serve() {
     var options = {
         ui: false,
         proxy: '127.0.0.1:8000',
-        open: "local",
+        open: false,
         notify: false,
         port: 8001,
         localOnly: true,
         online: false,
     };
-
-    // if (!isProduction()) {
-    //     options.middleware = [
-    //         function(req, res, next) {
-    //             se = req.url.match(/\/login\/(.*)/)
-    //             if (se && se.length > 1) {
-    //                 res.writeHead(302, {'Location': 'http://127.0.0.1:8888' + req.url});
-    //                 res.end();
-    //             } else {
-    //                 next();
-    //             }
-    //         }
-    //     ];
-    // }
     
     browserSync.init(options);
 
@@ -198,10 +199,10 @@ function serve() {
 
 
 gulp.task('cleanBuild', cleanBuild);
-gulp.task('copyStatic', ['cleanBuild'], copyStatic);
-gulp.task('copyPhaser', ['copyStatic'], copyPhaser);
-// gulp.task('copyProtobuf', ['copyPhaser'], copyProtobuf);
-gulp.task('updateGoProtobuf', ['copyPhaser'], updateGoProtobuf);
+gulp.task('copyCSS', ['cleanBuild'], copyCSS);
+gulp.task('copyJS', ['copyCSS'], copyJS);
+gulp.task('copyProtobuf', ['copyJS'], copyProtobuf);
+gulp.task('updateGoProtobuf', ['copyProtobuf'], updateGoProtobuf);
 gulp.task('build', ['updateGoProtobuf'], build);
 gulp.task('fastBuild', build);
 gulp.task('serve', ['build'], serve);
@@ -209,15 +210,8 @@ gulp.task('serve', ['build'], serve);
 if (!isProduction()) {
     gulp.task('watch-py', [], browserSync.reload);
     gulp.task('watch-js', ['fastBuild'], browserSync.reload);
-    gulp.task('watch-static', ['copyPhaser'], browserSync.reload);
+    gulp.task('watch-static', ['copyJS', 'copyCSS'], browserSync.reload);
     gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf'], browserSync.reload);
 }
 
-/**
- * The tasks are executed in the following order:
- * 'cleanBuild' -> 'copyStatic' -> 'copyPhaser' -> 'build' -> 'serve'
- * 
- * Read more about task dependencies in Gulp: 
- * https://medium.com/@dave_lunny/task-dependencies-in-gulp-b885c1ab48f0
- */
 gulp.task('default', ['serve']);

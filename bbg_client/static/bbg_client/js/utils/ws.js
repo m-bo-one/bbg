@@ -1,5 +1,5 @@
 import * as helpers from 'utils/helpers';
-import * as protobuf from "../../../node_modules/protobufjs/index.js";
+import * as protobuf from "../../../../node_modules/protobufjs/index.js";
 
 class ProtoStream {
 

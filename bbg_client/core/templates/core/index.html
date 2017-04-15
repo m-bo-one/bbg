@@ -4,10 +4,18 @@
 <head>
 	<meta charset="UTF-8">
 	<title>BBG</title>
-	<link rel="stylesheet" href="{% static 'styles/main.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'build/styles/bootstrap.min.css' %}" type="text/css">
 </head>
 <body>
-	<div id="content"></div>
+    <div class="container">
+        <div id="content"></div>
+        <ul>
+        {% for tank in user.tanks.all %}
+            <li>{{ tank.name }}</li>
+        {% endfor %}
+        </ul>
+    </div>
     <script type="text/javascript">
         var predefinedVars = {
             wsURL: "{{ BBG_WS_URL }}",

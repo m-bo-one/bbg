@@ -10,7 +10,8 @@ class Game extends Phaser.Game {
         this.state.add('MenuState', MenuState, false);
         this.state.add('GameState', GameState, false);
 
-        (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
+        // (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
+        this.state.start('GameState');
     }
 
     create() {

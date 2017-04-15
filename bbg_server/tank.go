@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	pb "github.com/DeV1doR/bbg/protobufs"
+	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"
@@ -193,7 +193,7 @@ func NewTank(c *Client) (*Tank, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := c.redis.HSet(tankDbKey, strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
+	if err := c.redis.HSet(tankDbKey, "uid:1:tank:"strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
 		return nil, err
 	}
 

@@ -22,28 +22,27 @@ export const getCookie = (key) => {
     return "";
 }
 
-export const makeRequest = (type, method, data) => {
+export const makeRequest = (rData) => {
     let prepareDict = {
-        'type': type,
-        'attributes': data
+        'type': rData.type,
+        'attributes': rData.data
     };
-    if (method == 'PATCH' || method == 'DELETE') {
-        prepareDict.id = data['id'] || null;
-        delete data['id'];
+    if (rData.method == 'PATCH' || rData.method == 'DELETE') {
+        prepareDict.id = rData.data['id'] || null;
     }
-    return fetch(`/api/v1/${type}/`, {
+    let url = rData.url.replace(/\/$/, '');
+    return fetch(`/api/v1/${url}/`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/vnd.api+json',
             'Authorization': `Token ${predefinedVars.currentUser.token}`,
             'X-CSRFToken': getCookie('csrfmiddlewaretoken')
         },
-        data: prepareDict
+        body: JSON.stringify({
+            data: prepareDict
+        })
     })
     .then(function(response) {
         return response.json();
-    })
-    .catch(function(error) {
-        console.log('Request failed', error);
     });
 }

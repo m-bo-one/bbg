@@ -4,4 +4,8 @@ tmp/
 *.log
 *.tmp
 *.pb.go
+!protobufs/
+bbg_client/protobufs/
+bbg_server/protobufs/
 vendor/
+www/

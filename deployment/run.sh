@@ -19,14 +19,13 @@ tmux split-window -d -t 0 -v
 tmux split-window -d -t 1 -h
 tmux split-window -d -t 0 -h
 
-workon $ENV_DIR
-
 # django morda
+tmux send-keys -t 3 'workon '$ENV enter
 tmux send-keys -t 3 'cd '$DJANGO_APP_DIR enter
 tmux send-keys -t 3 './manage.py runserver' enter
 
 # game ws
-tmux send-keys -t 2 'cd '$PROJ_DIR enter
+tmux send-keys -t 2 'cd '$GAME_APP_DIR enter
 tmux send-keys -t 2 'fresh -c fresh.conf' enter
 
 tmux select-pane -t 0

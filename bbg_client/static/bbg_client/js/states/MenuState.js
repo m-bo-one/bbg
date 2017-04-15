@@ -28,9 +28,19 @@ class MenuState extends Phaser.State {
     }
 
     createTank() {
-        makeRequest('tanks', 'POST', {'name': null})
+        makeRequest({
+            method: 'POST',
+            type: 'tanks',
+            url: 'tanks/',
+            data: {
+                name: 'test'
+            }
+        })
         .then(function(result) {
             console.log(result);
+        })
+        .catch(function(error) {
+            console.log('Request failed', error);
         });
     }
 

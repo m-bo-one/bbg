@@ -6,7 +6,7 @@ from .views import IndexView
 from .api import TankViewSet
 
 router = DefaultRouter()
-router.register(r'tanks', TankViewSet)
+router.register(r'tanks', TankViewSet, base_name='tanks')
 
 
 urlpatterns = [

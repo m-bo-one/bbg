@@ -1,4 +1,6 @@
-from rest_framework import serializers
+from django.utils.translation import ugettext as _
+
+from rest_framework_json_api import serializers
 
 from .models import Tank
 
@@ -15,3 +17,9 @@ class TankSerializer(serializers.ModelSerializer):
         model = Tank
         fields = ('player', 'name', 'lvl', 'kill_count', 'total_steps')
         read_only_fields = ('lvl', 'kill_count', 'total_steps')
+
+    def validate_player(self, player):
+        if not player.has_available_tank_slot:
+            raise serializers.ValidationError(
+                _('No more available tanks for this user.'))
+        return player

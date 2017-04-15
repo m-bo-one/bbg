@@ -9,6 +9,12 @@ from rest_framework.authtoken.models import Token
 
 class BBGUser(AbstractUser):
 
+    tanks_limit = models.SmallIntegerField(default=3)
+
+    @property
+    def has_available_tank_slot(self):
+        return self.tanks.count() < self.tanks_limit
+
     class JSONAPIMeta:
         resource_name = "users"
 
@@ -35,7 +41,7 @@ class Tank(models.Model):
 
     @property
     def tank_key(self):
-        return "bbg:users:%s:tanks" % self.player.pk
+        return "bbg:tanks"
 
     def game_connect(self):
         pass
@@ -43,9 +49,13 @@ class Tank(models.Model):
     def game_disconnect(self):
         pass
 
+    def _create_tank(self):
+        pass
+
     @property
     def hot_data(self):
-        return self.redis.hget(self.tank_key, self.pk)
+        return self.redis.hget(self.tank_key,
+                               "uid:%s:tank:%s" % (self.player.pk, self.pk))
 
 
 @receiver(post_save, sender=BBGUser)
