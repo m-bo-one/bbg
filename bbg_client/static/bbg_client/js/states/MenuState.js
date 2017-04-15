@@ -3,8 +3,8 @@ import { makeRequest } from 'utils/helpers';
 class MenuState extends Phaser.State {
 
     preload() {
-        this.game.imageLoad('new', 'assets/menu/new.png');
-        this.game.imageLoad('tankist', 'assets/menu/tankist.jpg');
+        this.game.imageLoad('new', 'menu/new.png');
+        this.game.imageLoad('tankist', 'menu/tankist.jpg');
     }
 
     create() {

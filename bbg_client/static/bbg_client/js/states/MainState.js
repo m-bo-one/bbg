@@ -1,8 +1,8 @@
 class MainState extends Phaser.State {
 
     preload() {
-        this.game.imageLoad('github', 'assets/social/github.png');
-        this.game.imageLoad('facebook', 'assets/social/facebook.png');
+        this.game.imageLoad('github', 'social/github.png');
+        this.game.imageLoad('facebook', 'social/facebook.png');
     }
 
     create() {

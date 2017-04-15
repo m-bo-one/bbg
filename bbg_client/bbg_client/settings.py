@@ -26,7 +26,9 @@ SECRET_KEY = '6bz8-41*@7oz18@wjg990!%k$%90357alqxe2#cl*pata32h%n'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '*'
+]
 
 AUTH_USER_MODEL = 'core.BBGUser'
 

@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+# from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 
 urlpatterns = [
@@ -25,4 +25,4 @@ urlpatterns = [
     url('', include('core.urls', namespace='core')),
 ]
 
-urlpatterns += staticfiles_urlpatterns()
+# urlpatterns += staticfiles_urlpatterns()

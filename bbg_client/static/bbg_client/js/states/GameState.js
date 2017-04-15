@@ -6,10 +6,10 @@ import * as helpers from 'utils/helpers';
 class GameState extends Phaser.State {
 
     preload() {
-        this.game.imageLoad('tank', 'assets/sprites/Tank.png');
-        this.game.imageLoad('gun-turret', 'assets/sprites/GunTurret.png');
-        this.game.imageLoad('bullet', 'assets/sprites/Bullet.png');
-        this.game.imageLoad('lazer', 'assets/sprites/Lazer.png');
+        this.game.imageLoad('tank', 'sprites/Tank.png');
+        this.game.imageLoad('gun-turret', 'sprites/GunTurret.png');
+        this.game.imageLoad('bullet', 'sprites/Bullet.png');
+        this.game.imageLoad('lazer', 'sprites/Lazer.png');
     }
 
     create() {

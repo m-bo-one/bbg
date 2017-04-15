@@ -193,7 +193,7 @@ func NewTank(c *Client) (*Tank, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := c.redis.HSet(tankDbKey, "uid:1:tank:"strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
+	if err := c.redis.HSet(tankDbKey, "uid:1:tank:"+strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
 		return nil, err
 	}
 
