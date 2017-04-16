@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
@@ -20,6 +22,8 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+	sync.RWMutex
 }
 
 func newHub() *Hub {
@@ -35,7 +39,9 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
+			h.Lock()
 			h.clients[client] = true
+			h.Unlock()
 			log.Debugln("Client subscribed")
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {

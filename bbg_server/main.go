@@ -6,6 +6,8 @@ import (
 	"os"
 	"runtime"
 
+	_ "net/http/pprof"
+
 	"github.com/DeV1doR/bbg/bbg_server/engine"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
@@ -61,7 +63,7 @@ func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, w http.ResponseWriter, r
 		redis: redis,
 		hub:   hub,
 		conn:  conn,
-		send:  make(chan *pb.BBGProtocol, 256),
+		send:  make(chan *pb.BBGProtocol, 1024),
 	}
 	client.hub.register <- client
 	go client.writePump()

@@ -26,6 +26,7 @@ type TGun struct {
 
 type Tank struct {
 	ID            uint32
+	Name          string
 	Health        int32
 	FireRate      int32
 	Speed         int32
@@ -52,7 +53,14 @@ func (t *Tank) GetRadius() int32 {
 }
 
 func (t *Tank) GetDamage(d int32) error {
-	atomic.AddInt32(&t.Health, -d)
+	t.Lock()
+	{
+		t.Health -= d
+		if t.IsDead() {
+			world.Remove(t)
+		}
+	}
+	t.Unlock()
 	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
@@ -60,7 +68,11 @@ func (t *Tank) GetDamage(d int32) error {
 func (t *Tank) restoreBullet() bool {
 	log.Debugf("Bullets: %+v, bulletsToReload: %+v, Need recharge: %+v \n", t.Bullets, bulletsToReload, !t.needRecharge)
 	if t.isFullReloaded() {
-		t.needRecharge = false
+		t.Lock()
+		{
+			t.needRecharge = false
+		}
+		t.Unlock()
 		return true
 	}
 	atomic.AddInt32(&t.Bullets, 1)
@@ -69,14 +81,14 @@ func (t *Tank) restoreBullet() bool {
 }
 
 func (t *Tank) reloader() {
-	if t.reloaderStarted {
-		return
-	}
-	t.reloaderStarted = true
 	ticker := time.NewTicker(TickRate * time.Millisecond)
 	defer func() {
 		ticker.Stop()
-		t.reloaderStarted = false
+		t.Lock()
+		{
+			t.reloaderStarted = false
+		}
+		t.Unlock()
 	}()
 	for {
 		select {
@@ -97,15 +109,29 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		log.Infof("Can't make a shoot. Tank #%d is dead.", t.ID)
 		return nil
 	}
+	if !t.reloaderStarted && t.isFullReloaded() {
+		t.Lock()
+		{
+			t.reloaderStarted = true
+		}
+		t.Unlock()
+
+		go t.reloader()
+	}
 	if t.Bullets == 0 && !t.needRecharge {
 		t.needRecharge = true
 		return nil
 	} else if t.needRecharge || t.Bullets < 0 {
 		return nil
 	}
-	t.LastShoot = time.Now().UTC().Unix()
-	t.Cmd.MouseAxes.X = *axes.X
-	t.Cmd.MouseAxes.Y = *axes.Y
+
+	t.Lock()
+	{
+		t.LastShoot = time.Now().UTC().Unix()
+		t.Cmd.MouseAxes.X = *axes.X
+		t.Cmd.MouseAxes.Y = *axes.Y
+	}
+	t.Unlock()
 
 	atomic.AddInt32(&t.Bullets, -1)
 	bullet, err := NewBullet(t)
@@ -114,21 +140,23 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		return err
 	}
 	go bullet.Update(t.WSClient)
-	go t.reloader()
 
 	t.UpdateTank(t.WSClient.redis, t.tKey)
 
 	return nil
 }
 
+// Stop command for tank
 func (t *Tank) Stop() error {
 	return nil
 }
 
+// UpdateAngle update agnle of turret
 func (t *Tank) UpdateAngle() {
 	t.Cmd.Angle = AngleFromP2P(float64(t.Cmd.X), float64(t.Cmd.Y), t.Cmd.MouseAxes.X, t.Cmd.MouseAxes.Y)
 }
 
+// IsDead show tank status if health of tank less than zero
 func (t *Tank) IsDead() bool {
 	if t.Health <= 0 {
 		return true
@@ -136,14 +164,17 @@ func (t *Tank) IsDead() bool {
 	return false
 }
 
+// TurretRotate make tank turret rotating around its axis
 func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 	if t.IsDead() {
 		log.Infof("Can't make a turret rotation. Tank #%d is dead.", t.ID)
 		return nil
 	}
+	t.Lock()
 	t.Cmd.MouseAxes.X = *axes.X
 	t.Cmd.MouseAxes.Y = *axes.Y
 	t.UpdateAngle()
+	t.Unlock()
 	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
@@ -176,6 +207,9 @@ func (t *Tank) Move(direction *pb.Direction) error {
 }
 
 func (t *Tank) ToProtobuf() *pb.TankUpdate {
+	t.Lock()
+	defer t.Unlock()
+
 	var status pb.TankUpdate_Status
 	if t.IsDead() {
 		status = pb.TankUpdate_Dead
@@ -188,6 +222,7 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		X:         &t.Cmd.X,
 		Y:         &t.Cmd.Y,
 		Health:    &t.Health,
+		Name:      &t.Name,
 		FireRate:  &t.FireRate,
 		Bullets:   &t.Bullets,
 		Speed:     &t.Speed,
@@ -209,9 +244,12 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 	}
 	tank := &Tank{
 		ID:       pbMsg.GetId(),
+		Name:     pbMsg.GetName(),
 		Health:   pbMsg.GetHealth(),
 		FireRate: pbMsg.GetFireRate(),
 		Speed:    pbMsg.GetSpeed(),
+		Width:    pbMsg.GetWidth(),
+		Height:   pbMsg.GetHeight(),
 		TGun: TGun{
 			Bullets:  pbMsg.Gun.GetBullets(),
 			Damage:   pbMsg.Gun.GetDamage(),
@@ -232,26 +270,30 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 }
 
 func (t *Tank) UpdateTank(redis *redis.Client, tKey string) error {
-	if _, err := redis.HGet(tHash, tKey).Result(); err != nil {
-		return err
+	var pbMsg *pb.Tank
+	t.Lock()
+	{
+		pbMsg = &pb.Tank{
+			Id:       &t.ID,
+			X:        &t.Cmd.X,
+			Y:        &t.Cmd.Y,
+			Name:     &t.Name,
+			Health:   &t.Health,
+			Speed:    &t.Speed,
+			FireRate: &t.FireRate,
+			Width:    &t.Width,
+			Height:   &t.Height,
+			Gun: &pb.TankGun{
+				Damage:   &t.TGun.Damage,
+				Bullets:  &t.TGun.Bullets,
+				Distance: &t.TGun.Distance,
+			},
+			Angle:     &t.Cmd.Angle,
+			Direction: &t.Cmd.Direction,
+		}
 	}
-	pbMsg := &pb.Tank{
-		Id:       &t.ID,
-		X:        &t.Cmd.X,
-		Y:        &t.Cmd.Y,
-		Health:   &t.Health,
-		Speed:    &t.Speed,
-		FireRate: &t.FireRate,
-		Width:    &t.Width,
-		Height:   &t.Height,
-		Gun: &pb.TankGun{
-			Damage:   &t.TGun.Damage,
-			Bullets:  &t.TGun.Bullets,
-			Distance: &t.TGun.Distance,
-		},
-		Angle:     &t.Cmd.Angle,
-		Direction: &t.Cmd.Direction,
-	}
+	t.Unlock()
+
 	encoded, err := proto.Marshal(pbMsg)
 	if err != nil {
 		return err

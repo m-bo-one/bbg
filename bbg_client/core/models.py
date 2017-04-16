@@ -38,37 +38,85 @@ class RTankProxy(object):
     def x(self):
         return self._rget().x
 
+    @x.setter
+    def x(self, value):
+        self._rupdate(x=value)
+
     @property
     def y(self):
         return self._rget().y
+
+    @y.setter
+    def y(self, value):
+        self._rupdate(y=value)
 
     @property
     def health(self):
         return self._rget().health
 
+    @health.setter
+    def health(self, value):
+        self._rupdate(health=value)
+
     @property
     def speed(self):
         return self._rget().speed
+
+    @speed.setter
+    def speed(self, value):
+        self._rupdate(speed=value)
 
     @property
     def fire_rate(self):
         return self._rget().fireRate
 
+    @fire_rate.setter
+    def fire_rate(self, value):
+        self._rupdate(fireRate=value)
+
     @property
     def width(self):
         return self._rget().width
+
+    @width.setter
+    def width(self, value):
+        self._rupdate(width=value)
 
     @property
     def height(self):
         return self._rget().height
 
+    @height.setter
+    def height(self, value):
+        self._rupdate(height=value)
+
     @property
     def gun_damage(self):
         return self._rget().gun.damage
 
+    @gun_damage.setter
+    def gun_damage(self, value):
+        self._rupdate(**{
+            'gun': bbg1_pb2.TankGun(
+                damage=int(value),
+                bullets=self.gun_bullets,
+                distance=self.gun_distance,
+            )
+        })
+
     @property
     def gun_bullets(self):
         return self._rget().gun.bullets
+
+    @gun_bullets.setter
+    def gun_bullets(self, value):
+        self._rupdate(**{
+            'gun': bbg1_pb2.TankGun(
+                damage=self.gun_damage,
+                bullets=int(value),
+                distance=self.gun_distance,
+            )
+        })
 
     @property
     def gun_distance(self):
@@ -88,6 +136,26 @@ class RTankProxy(object):
     def direction(self):
         return self._rget().direction
 
+    @direction.setter
+    def direction(self, value):
+        self._rupdate(direction=value)
+
+    @property
+    def angle(self):
+        return self._rget().angle
+
+    @angle.setter
+    def angle(self, value):
+        self._rupdate(angle=value)
+
+    @property
+    def nickname(self):
+        return self._rget().name
+
+    @nickname.setter
+    def nickname(self, value):
+        self._rupdate(name=value)
+
     @property
     def redis(self):
         if not hasattr(self, '_redis'):
@@ -98,20 +166,28 @@ class RTankProxy(object):
     def thash(self):
         return "bbg:tanks"
 
-    def save(self):
-        super(RTankProxy, self).save()
+    def save(self, **kwargs):
+        super(RTankProxy, self).save(**kwargs)
         if not self._rget():
             self._rcreate()
+
+        self.nickname = self.name
 
     def delete(self):
         super(RTankProxy, self).delete()
         self._rdel()
+
+    def refresh_from_db(self):
+        super(RTankProxy, self).refresh_from_db()
+        self._rdrop_cache()
+        self._rget()
 
     def recreate(self):
         self._rdel()
         self._rcreate()
 
     def _rupdate(self, **kw):
+        self._rdrop_cache()
         tank = self._rget()
         if tank:
             for k, v in kw.items():
@@ -127,16 +203,24 @@ class RTankProxy(object):
             id=self.pk,
             x=int(settings.GAME_CONFIG['MAP']['width'] / 2),
             y=int(settings.GAME_CONFIG['MAP']['height'] / 2),
+            name=self.name
         )
         self.redis.hset(self.thash, self.tkey, tank.SerializeToString())
         return tank
 
+    def _rdrop_cache(self):
+        if hasattr(self, '_crget'):
+            del self._crget
+
     def _rget(self):
-        buffer = self.redis.hget(self.thash, self.tkey)
-        if buffer:
-            tank = bbg1_pb2.Tank()
-            tank.ParseFromString(buffer)
-            return tank
+        if not hasattr(self, '_crget'):
+            buffer = self.redis.hget(self.thash, self.tkey)
+            if buffer:
+                self._crget = bbg1_pb2.Tank()
+                self._crget.ParseFromString(buffer)
+            else:
+                self._crget = None
+        return self._crget
 
     def _rdel(self):
         self.redis.hdel(self.thash, self.tkey)
@@ -166,18 +250,22 @@ class Tank(RTankProxy, models.Model):
     class JSONAPIMeta:
         resource_name = "tanks"
 
-    def save(self):
+    def save(self, **kwargs):
         is_created = True if self.pk else False
         if is_created and not self.player.has_available_tank_slot:
             raise Exception(_("No more available tanks for this user."))
 
-        super(Tank, self).save()
+        super(Tank, self).save(**kwargs)
 
     def game_connect(self):
         pass
 
     def game_disconnect(self):
         pass
+
+    def __str__(self):
+        return "Player: {player}; Tank: {name}; LvL: {lvl}" \
+            .format(player=self.player, name=self.name, lvl=self.lvl)
 
 
 @receiver(post_save, sender=BBGUser)

@@ -38,6 +38,8 @@ func (b *Bullet) GetRadius() int32 {
 }
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
+	b.Lock()
+	defer b.Unlock()
 	return &pb.BulletUpdate{
 		Id:       &b.ID,
 		TankId:   &b.TankID,
@@ -95,7 +97,6 @@ func (b *Bullet) Update(c *Client) {
 			})
 			if tank, isCollide := b.IsColide(); isCollide || b.IsOutOfRange() {
 				if tank != nil {
-					log.Fatalf("%+v \n", tank)
 					tank.GetDamage(5)
 					c.sendProtoData(pb.BBGProtocol_TankUpdate, tank.ToProtobuf(), true)
 				}

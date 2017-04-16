@@ -32,7 +32,7 @@ message TankMove {
 message TankGun {
     optional int32 bullets = 1 [default = 3];
     optional uint32 damage = 2 [default = 10];
-    optional double distance = 3 [default = 50.0];
+    optional double distance = 3 [default = 750.0];
 }
 
 message Tank {
@@ -47,6 +47,7 @@ message Tank {
     optional uint32 width = 9 [default = 10];
     optional uint32 height = 10 [default = 10];
     optional double angle = 11 [default = 0];
+    required string name = 12;
 }
 
 
@@ -69,6 +70,7 @@ message TankUpdate {
     optional Status status = 10;
     required double angle = 11;
     required uint32 damage = 12;
+    required string name = 13;
 
     optional uint32 prevId = 20;
 }

@@ -19,6 +19,11 @@ class Tank extends BaseElement {
         this.turretSprite.scale.setTo(0.25, 0.25);
         this.turretSprite.anchor.setTo(0.25, 0.5);
 
+        // add nickname
+        this.textNick = this.game.add.text(x, y, data.name);
+        this.textNick.scale.setTo(0.5);
+        this.textNick.anchor.setTo(0.5, 2);
+
         this.update(data);
 
         this.cmdId = 1;
@@ -75,6 +80,7 @@ class Tank extends BaseElement {
     destroy() {
         this.tankSprite.destroy();
         this.turretSprite.destroy();
+        this.textNick.destroy();
     }
 
     update(data) {
@@ -87,6 +93,19 @@ class Tank extends BaseElement {
         this.direction = data.direction;
         this.turretAngle = data.angle;
         this.damage = data.damage;
+
+        if (this.isDead()) {
+            this.changeColor(0xff9a22);
+        }
+    }
+
+    isDead() {
+        return this.health <= 0;
+    }
+
+    changeColor(color) {
+        this.tankSprite.tint = color;
+        this.turretSprite.tint = color;
     }
 
     syncData(type, data) {
@@ -118,7 +137,7 @@ class Tank extends BaseElement {
     }
 
     rotate() {
-        if (!this.game.input.mousePointer.withinGame) return;
+        if (this.isDead() || !this.game.input.mousePointer.withinGame) return;
         this.turretAngle = this.game.physics.arcade.angleToPointer(this.turretSprite);
         this.syncData('TankRotate', {
             x: this.x,
@@ -131,6 +150,7 @@ class Tank extends BaseElement {
     }
 
     move(direction) {
+        if (this.isDead()) return;
         this.rotate();
         switch(direction) {
             case 'N':
@@ -173,11 +193,13 @@ class Tank extends BaseElement {
     set x(coord) {
         super.x = coord;
         this.turretSprite.x = coord;
+        this.textNick.x = coord;
     }
 
     set y(coord) {
         super.y = coord;
         this.turretSprite.y = coord;
+        this.textNick.y = coord;
     }
 
 }

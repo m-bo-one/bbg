@@ -39,6 +39,8 @@ type Client struct {
 }
 
 func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
+	hub.RLock()
+	defer hub.RUnlock()
 	for client, active := range hub.clients {
 		if active && client.tank != nil {
 			tanks = append(tanks, client.tank.ToProtobuf())
