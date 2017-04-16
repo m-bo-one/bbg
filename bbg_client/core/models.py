@@ -1,9 +1,14 @@
+import hashlib
+import random
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 
 from django_redis import get_redis_connection
 from rest_framework.authtoken.models import Token
@@ -75,10 +80,6 @@ class RTankProxy(object):
     def thash(self):
         return "bbg:tanks"
 
-    @property
-    def tkey(self):
-        return "uid:%s:tank:%s" % (self.player.pk, self.pk)
-
     def save(self):
         super(RTankProxy, self).save()
 
@@ -89,7 +90,7 @@ class RTankProxy(object):
         tank = bbg1_pb2.Tank(
             id=self.pk,
             x=int(settings.GAME_CONFIG['MAP']['width'] / 2),
-            y=int(settings.GAME_CONFIG['MAP']['height'] / 2)
+            y=int(settings.GAME_CONFIG['MAP']['height'] / 2),
         )
         buffer = tank.SerializeToString()
         self.redis.hset(self.thash, self.tkey, buffer)
@@ -103,9 +104,19 @@ class RTankProxy(object):
             return tank
 
 
+def generate_rtk():
+    return hashlib.md5(
+        "{uid}:{salt}:{now}".format(uid=uuid.uuid4().hex,
+                                    salt=random.random(),
+                                    now=timezone.now().timestamp())
+        .encode('utf-8')
+    ).hexdigest()
+
+
 class Tank(RTankProxy, models.Model):
 
     player = models.ForeignKey('BBGUser', related_name='tanks')
+    tkey = models.CharField(max_length=32, unique=True, default=generate_rtk)
 
     name = models.CharField(max_length=16)
     lvl = models.BigIntegerField(default=1)
@@ -118,8 +129,10 @@ class Tank(RTankProxy, models.Model):
         resource_name = "tanks"
 
     def save(self):
-        if self.pk and not self.player.has_available_tank_slot:
+        is_created = True if self.pk else False
+        if is_created and not self.player.has_available_tank_slot:
             raise Exception(_("No more available tanks for this user."))
+
         super(Tank, self).save()
 
     def game_connect(self):

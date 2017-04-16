@@ -85,20 +85,24 @@ func (c *Client) mapToProtobuf() *pb.MapUpdate {
 	}
 }
 
-func (c *Client) getUID(token string) (uint32, error) {
-	rows, err := c.db.Query("SELECT user_id FROM authtoken_token WHERE authtoken_token.key=? LIMIT 1", token)
+func (c *Client) getTKey(token string) (string, error) {
+	rows, err := c.db.Query(`SELECT tank.tkey
+		FROM authtoken_token AS token
+		INNER JOIN core_tank AS tank
+		ON tank.player_id = token.user_id
+		WHERE token.key =? LIMIT 1`, token)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var userID uint32
-		if err := rows.Scan(&userID); err != nil {
-			return 0, err
+		var tKey string
+		if err := rows.Scan(&tKey); err != nil {
+			return "", err
 		}
-		return userID, nil
+		return tKey, nil
 	}
-	return 0, errors.New("UID not found")
+	return "", errors.New("UID not found")
 }
 
 func (c *Client) manageEvent(message *pb.BBGProtocol) error {
@@ -119,11 +123,11 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if c.tank != nil {
 			return errors.New("TankReg: Tank already registred for this client")
 		}
-		UID, err := c.getUID(message.TankReg.GetToken())
+		tKey, err := c.getTKey(message.TankReg.GetToken())
 		if err != nil {
-			return fmt.Errorf("TankReg: Get UID error: %s", err)
+			return fmt.Errorf("TankReg: Get tKey error: %s", err)
 		}
-		tank, err := LoadTank(c, c.redis, UID, message.TankReg.GetTankId())
+		tank, err := LoadTank(c, c.redis, tKey)
 		if err != nil {
 			return fmt.Errorf("TankReg: error: %s", err)
 		}

@@ -31,7 +31,7 @@ class GameState extends Phaser.State {
         this.game.stream.onLoadComplete(() => {
             this.game.stream.send("TankReg", {
                 token: predefinedVars.currentUser.token,
-                tankId: 5
+                tankId: "6a5c7d1fbd4a121ae32dc53edbb0b724"
             });
             let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
             let callback = (e) => {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,7 +32,7 @@ type Tank struct {
 	LastShoot     int64
 	Cmd           *Cmd
 	WSClient      *Client
-	UID           uint32
+	tKey          string
 
 	TGun
 	sync.Mutex
@@ -53,7 +52,7 @@ func (t *Tank) GetRadius() int32 {
 
 func (t *Tank) GetDamage(d int32) error {
 	atomic.AddInt32(&t.Health, -d)
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
 
@@ -64,7 +63,7 @@ func (t *Tank) restoreBullet() bool {
 		return true
 	}
 	atomic.AddInt32(&t.Bullets, 1)
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return false
 }
 
@@ -116,7 +115,7 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 	go bullet.Update(t.WSClient)
 	go t.reloader()
 
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 
 	return nil
 }
@@ -144,7 +143,7 @@ func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 	t.Cmd.MouseAxes.X = *axes.X
 	t.Cmd.MouseAxes.Y = *axes.Y
 	t.UpdateAngle()
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
 
@@ -171,7 +170,7 @@ func (t *Tank) Move(direction *pb.Direction) error {
 		}
 		t.Unlock()
 	})
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
 
@@ -198,8 +197,7 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 	}
 }
 
-func LoadTank(c *Client, redis *redis.Client, UID uint32, pk uint32) (*Tank, error) {
-	tKey := fmt.Sprintf("uid:%d:tank:%d", UID, pk)
+func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 	val, err := redis.HGet(tHash, tKey).Result()
 	if err != nil {
 		return nil, err
@@ -225,14 +223,13 @@ func LoadTank(c *Client, redis *redis.Client, UID uint32, pk uint32) (*Tank, err
 			MouseAxes: &MouseAxes{},
 		},
 		WSClient: c,
-		UID:      UID,
+		tKey:     tKey,
 	}
 	world.Add(tank)
 	return tank, nil
 }
 
-func (t *Tank) UpdateTank(redis *redis.Client, UID uint32, pk uint32) error {
-	tKey := fmt.Sprintf("uid:%d:tank:%d", UID, pk)
+func (t *Tank) UpdateTank(redis *redis.Client, tKey string) error {
 	if _, err := redis.HGet(tHash, tKey).Result(); err != nil {
 		return err
 	}
@@ -265,6 +262,6 @@ func (t *Tank) UpdateTank(redis *redis.Client, UID uint32, pk uint32) error {
 
 func (t *Tank) RemoveTank() error {
 	world.Remove(t)
-	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	t.UpdateTank(t.WSClient.redis, t.tKey)
 	return nil
 }
