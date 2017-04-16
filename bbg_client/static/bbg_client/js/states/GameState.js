@@ -28,6 +28,18 @@ class GameState extends Phaser.State {
         });
         this.game.time.advancedTiming = true; // enable FPS
         this.game.stream = new ProtoStream(`ws://${predefinedVars.wsURL}/game`);
+        this.game.stream.onLoadComplete(() => {
+            this.game.stream.send("TankReg", {
+                token: predefinedVars.currentUser.token,
+                tankId: 5
+            });
+            let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
+            let callback = (e) => {
+                window.removeEventListener(callbackType, callback);
+                this.game.stream.send('TankUnreg');
+            };
+            window.addEventListener(callbackType, callback);
+        });
     }
 
     update() {

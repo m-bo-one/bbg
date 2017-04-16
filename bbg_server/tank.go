@@ -1,8 +1,7 @@
 package main
 
 import (
-	"math"
-	"strconv"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,7 +13,7 @@ import (
 )
 
 const (
-	tankDbKey       string = "bbg:tanks"
+	tHash           string = "bbg:tanks"
 	bulletsToReload        = 3
 )
 
@@ -34,6 +33,7 @@ type Tank struct {
 	LastShoot     int64
 	Cmd           *Cmd
 	WSClient      *Client
+	UID           uint32
 
 	TGun
 	sync.Mutex
@@ -53,6 +53,7 @@ func (t *Tank) GetRadius() int32 {
 
 func (t *Tank) GetDamage(d int32) error {
 	atomic.AddInt32(&t.Health, -d)
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
 	return nil
 }
 
@@ -63,6 +64,7 @@ func (t *Tank) restoreBullet() bool {
 		return true
 	}
 	atomic.AddInt32(&t.Bullets, 1)
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
 	return false
 }
 
@@ -91,17 +93,21 @@ func (t *Tank) isFullReloaded() bool {
 }
 
 func (t *Tank) Shoot(axes *pb.MouseAxes) error {
+	if t.IsDead() {
+		log.Infof("Can't make a shoot. Tank #%d is dead.", t.ID)
+		return nil
+	}
 	if t.Bullets == 0 && !t.needRecharge {
 		t.needRecharge = true
 		return nil
-	} else if t.needRecharge {
+	} else if t.needRecharge || t.Bullets < 0 {
 		return nil
 	}
-	atomic.AddInt32(&t.Bullets, -1)
 	t.LastShoot = time.Now().UTC().Unix()
 	t.Cmd.MouseAxes.X = *axes.X
 	t.Cmd.MouseAxes.Y = *axes.Y
 
+	atomic.AddInt32(&t.Bullets, -1)
 	bullet, err := NewBullet(t)
 	if err != nil {
 		atomic.AddInt32(&t.Bullets, 1)
@@ -109,6 +115,9 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 	}
 	go bullet.Update(t.WSClient)
 	go t.reloader()
+
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+
 	return nil
 }
 
@@ -116,17 +125,34 @@ func (t *Tank) Stop() error {
 	return nil
 }
 
+func (t *Tank) UpdateAngle() {
+	t.Cmd.Angle = AngleFromP2P(float64(t.Cmd.X), float64(t.Cmd.Y), t.Cmd.MouseAxes.X, t.Cmd.MouseAxes.Y)
+}
+
+func (t *Tank) IsDead() bool {
+	if t.Health <= 0 {
+		return true
+	}
+	return false
+}
+
 func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
+	if t.IsDead() {
+		log.Infof("Can't make a turret rotation. Tank #%d is dead.", t.ID)
+		return nil
+	}
 	t.Cmd.MouseAxes.X = *axes.X
 	t.Cmd.MouseAxes.Y = *axes.Y
-	t.Cmd.Angle = math.Atan2(
-		t.Cmd.MouseAxes.Y-float64(t.Cmd.Y),
-		t.Cmd.MouseAxes.X-float64(t.Cmd.X),
-	)
+	t.UpdateAngle()
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
 	return nil
 }
 
 func (t *Tank) Move(direction *pb.Direction) error {
+	if t.IsDead() {
+		log.Infof("Can't make a move. Tank #%d is dead.", t.ID)
+		return nil
+	}
 	world.Update(t, func() {
 		t.Lock()
 		{
@@ -145,10 +171,17 @@ func (t *Tank) Move(direction *pb.Direction) error {
 		}
 		t.Unlock()
 	})
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
 	return nil
 }
 
 func (t *Tank) ToProtobuf() *pb.TankUpdate {
+	var status pb.TankUpdate_Status
+	if t.IsDead() {
+		status = pb.TankUpdate_Dead
+	} else {
+		status = pb.TankUpdate_Alive
+	}
 	return &pb.TankUpdate{
 		Id:        &t.Cmd.ID,
 		TankId:    &t.ID,
@@ -161,79 +194,77 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		Direction: &t.Cmd.Direction,
 		Angle:     &t.Cmd.Angle,
 		Damage:    &t.Damage,
+		Status:    &status,
 	}
 }
 
-func NewTank(c *Client) (*Tank, error) {
-	pk, err := c.redis.Incr(tankDbKey + ":id").Result()
+func LoadTank(c *Client, redis *redis.Client, UID uint32, pk uint32) (*Tank, error) {
+	tKey := fmt.Sprintf("uid:%d:tank:%d", UID, pk)
+	val, err := redis.HGet(tHash, tKey).Result()
 	if err != nil {
 		return nil, err
 	}
-	direction := pb.Direction_N
-	t := &Tank{
-		ID:       uint32(pk),
-		Health:   100,
-		FireRate: 100,
-		Speed:    5,
-		Width:    10,
-		Height:   10,
-		WSClient: c,
-		TGun: TGun{
-			Bullets: bulletsToReload,
-			Damage:  10,
-		},
-		Cmd: &Cmd{
-			X:         MapWidth / 2,
-			Y:         MapHeight / 2,
-			Direction: direction,
-			MouseAxes: &MouseAxes{},
-		},
-	}
-	encoded, err := proto.Marshal(t.ToProtobuf())
-	if err != nil {
-		return nil, err
-	}
-	if err := c.redis.HSet(tankDbKey, "uid:1:tank:"+strconv.FormatInt(pk, 10), encoded).Err(); err != nil {
-		return nil, err
-	}
-
-	world.Add(t)
-	return t, nil
-}
-
-func LoadTank(redis *redis.Client, pk *uint32) (*Tank, error) {
-	val, err := redis.HGet(tankDbKey, strconv.Itoa(int(*pk))).Result()
-	if err != nil {
-		return nil, err
-	}
-	pbMsg := &pb.TankUpdate{}
+	pbMsg := &pb.Tank{}
 	if err := proto.Unmarshal([]byte(val), pbMsg); err != nil {
 		return nil, err
 	}
-	return &Tank{
-		ID:       *pbMsg.TankId,
-		Health:   *pbMsg.Health,
-		FireRate: *pbMsg.FireRate,
-		Speed:    *pbMsg.Speed,
+	tank := &Tank{
+		ID:       pbMsg.GetId(),
+		Health:   pbMsg.GetHealth(),
+		FireRate: pbMsg.GetFireRate(),
+		Speed:    pbMsg.GetSpeed(),
 		TGun: TGun{
-			Bullets: *pbMsg.Bullets,
-			Damage:  *pbMsg.Damage,
+			Bullets: pbMsg.Gun.GetBullets(),
+			Damage:  pbMsg.Gun.GetDamage(),
 		},
 		Cmd: &Cmd{
-			X:         *pbMsg.X,
-			Y:         *pbMsg.Y,
-			Direction: *pbMsg.Direction,
-			Angle:     *pbMsg.Angle,
+			X:         pbMsg.GetX(),
+			Y:         pbMsg.GetY(),
+			Direction: pbMsg.GetDirection(),
+			Angle:     pbMsg.GetAngle(),
 			MouseAxes: &MouseAxes{},
 		},
-	}, nil
+		WSClient: c,
+		UID:      UID,
+	}
+	world.Add(tank)
+	return tank, nil
 }
 
-func RemoveTank(c *Client) (uint32, error) {
-	_, err := c.redis.HDel(tankDbKey, strconv.Itoa(int(c.tank.ID))).Result()
-	if err != nil {
-		return 0, err
+func (t *Tank) UpdateTank(redis *redis.Client, UID uint32, pk uint32) error {
+	tKey := fmt.Sprintf("uid:%d:tank:%d", UID, pk)
+	if _, err := redis.HGet(tHash, tKey).Result(); err != nil {
+		return err
 	}
-	world.Remove(c.tank)
-	return c.tank.ID, nil
+	pbMsg := &pb.Tank{
+		Id:       &t.ID,
+		X:        &t.Cmd.X,
+		Y:        &t.Cmd.Y,
+		Health:   &t.Health,
+		Speed:    &t.Speed,
+		FireRate: &t.FireRate,
+		Width:    &t.Width,
+		Height:   &t.Height,
+		Gun: &pb.TankGun{
+			Damage:  &t.TGun.Damage,
+			Bullets: &t.TGun.Bullets,
+		},
+		Angle:     &t.Cmd.Angle,
+		Direction: &t.Cmd.Direction,
+	}
+	encoded, err := proto.Marshal(pbMsg)
+	if err != nil {
+		return err
+	}
+	if _, err := redis.HSet(tHash, tKey, encoded).Result(); err != nil {
+		return err
+	}
+	log.Debugf("Send update for tank #%d to redis...", t.ID)
+	return nil
+}
+
+func (t *Tank) RemoveTank() error {
+	world.Remove(t)
+	t.UpdateTank(t.WSClient.redis, t.UID, t.ID)
+	return nil
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -82,21 +81,9 @@ func (b *Bullet) Update(c *Client) {
 			})
 			if tank, isCollide := b.IsColide(); isCollide {
 				if tank != nil {
+					log.Fatalf("%+v \n", tank)
 					tank.GetDamage(5)
-					if tank.Health <= 0 {
-						_, err := c.redis.HDel(tankDbKey, strconv.Itoa(int(tank.ID))).Result()
-						if err != nil {
-							log.Errorln("TankUreg error: ", err)
-						} else {
-							world.Remove(tank)
-							pk := tank.ID
-							tank = nil
-							var testID uint32
-							c.sendProtoData(pb.BBGProtocol_TankRemove, &pb.TankRemove{Id: &testID, TankId: &pk}, true)
-						}
-					} else {
-						c.sendProtoData(pb.BBGProtocol_TankUpdate, tank.ToProtobuf(), true)
-					}
+					c.sendProtoData(pb.BBGProtocol_TankUpdate, tank.ToProtobuf(), true)
 				}
 				b.Alive = false
 				return

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -17,6 +19,9 @@ const (
 )
 
 type Client struct {
+	// sql client
+	db *sql.DB
+
 	// redis client
 	redis *redis.Client
 
@@ -80,16 +85,31 @@ func (c *Client) mapToProtobuf() *pb.MapUpdate {
 	}
 }
 
-func (c *Client) manageEvent(message *pb.BBGProtocol) {
+func (c *Client) getUID(token string) (uint32, error) {
+	rows, err := c.db.Query("SELECT user_id FROM authtoken_token WHERE authtoken_token.key=? LIMIT 1", token)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID uint32
+		if err := rows.Scan(&userID); err != nil {
+			return 0, err
+		}
+		return userID, nil
+	}
+	return 0, errors.New("UID not found")
+}
+
+func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 	switch pType := message.Type; *pType {
 	case pb.BBGProtocol_TankUnreg:
 		if c.tank == nil {
-			return
+			return errors.New("TankUnreg: Tank does not exist")
 		}
-		pk, err := RemoveTank(c)
-		if err != nil {
-			log.Errorln("TankUreg error: ", err)
-			return
+		pk := c.tank.ID
+		if err := c.tank.RemoveTank(); err != nil {
+			return fmt.Errorf("TankUnreg: error: %s", err)
 		}
 		c.tank = nil
 		var testID uint32
@@ -97,12 +117,15 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 
 	case pb.BBGProtocol_TankReg:
 		if c.tank != nil {
-			return
+			return errors.New("TankReg: Tank already registred for this client")
 		}
-		tank, err := NewTank(c)
+		UID, err := c.getUID(message.TankReg.GetToken())
 		if err != nil {
-			log.Errorln("TankReg error: ", err)
-			return
+			return fmt.Errorf("TankReg: Get UID error: %s", err)
+		}
+		tank, err := LoadTank(c, c.redis, UID, message.TankReg.GetTankId())
+		if err != nil {
+			return fmt.Errorf("TankReg: error: %s", err)
 		}
 		c.tank = tank
 		c.sendProtoData(pb.BBGProtocol_TankNew, c.tank.ToProtobuf(), false)
@@ -110,34 +133,31 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 
 	case pb.BBGProtocol_TankMove:
 		if c.tank == nil {
-			return
+			return errors.New("TankMove: Tank does not exist")
 		}
 		if err := c.tank.Move(message.TankMove.Direction); err != nil {
-			log.Errorln(err)
-			return
+			return err
 		}
 
 	case pb.BBGProtocol_TankRotate:
 		if c.tank == nil {
-			return
+			return errors.New("TankRotate: Tank does not exist")
 		}
 		if err := c.tank.TurretRotate(message.TankRotate.MouseAxes); err != nil {
-			log.Errorln(err)
-			return
+			return err
 		}
 
 	case pb.BBGProtocol_TankShoot:
 		if c.tank == nil {
-			return
+			return errors.New("TankShoot: Tank does not exist")
 		}
 		if err := c.tank.Shoot(message.TankShoot.MouseAxes); err != nil {
-			log.Errorln("Shoot error: ", err)
-			return
+			return fmt.Errorf("TankShoot: error: %s", err)
 		}
 
 	default:
 		c.sendProtoData(pb.BBGProtocol_UnhandledType, nil, false)
-		return
+		return nil
 	}
 
 	log.Debugf("Incomming message: %+v \n", message)
@@ -145,6 +165,8 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) {
 	if c.tank != nil {
 		c.sendProtoData(pb.BBGProtocol_TankUpdate, c.tank.ToProtobuf(), true)
 	}
+
+	return nil
 }
 
 func (c *Client) readPump() {
@@ -170,7 +192,9 @@ func (c *Client) readPump() {
 		}
 
 		log.Debugln("readPump - reading...")
-		c.manageEvent(pbMsg)
+		if err := c.manageEvent(pbMsg); err != nil {
+			panic(err)
+		}
 	}
 }
 

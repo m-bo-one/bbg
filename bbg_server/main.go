@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 	"os"
 	"runtime"
@@ -49,13 +50,14 @@ func init() {
 	}
 }
 
-func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Request) {
+func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
 	client := &Client{
+		db:    db,
 		redis: redis,
 		hub:   hub,
 		conn:  conn,
@@ -66,13 +68,21 @@ func serveWS(hub *Hub, redis *redis.Client, w http.ResponseWriter, r *http.Reque
 	client.readPump()
 }
 
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
+	// Initialize mysql db
+	db, err := MySQLClient(appConf)
+	checkErr(err)
+	defer db.Close()
+
 	// Initialize redis db
 	redis, err := RedisClient(appConf)
-	if err != nil {
-		log.Errorln(err)
-		return
-	}
+	checkErr(err)
 	defer redis.Close()
 
 	// Initialize web socket hub
@@ -80,7 +90,7 @@ func main() {
 	go hub.run()
 
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
-		serveWS(hub, redis, w, r)
+		serveWS(hub, db, redis, w, r)
 	})
 
 	log.Infof("Starting server on %s \n", appConf.Addr)

@@ -41,6 +41,7 @@ func (h *Hub) run() {
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
+				log.Debugln("Client unsubscribed")
 			}
 		case message := <-h.broadcast:
 			for client := range h.clients {
@@ -49,6 +50,7 @@ func (h *Hub) run() {
 				default:
 					close(client.send)
 					delete(h.clients, client)
+					log.Debugln("Client closed conn")
 				}
 			}
 		}

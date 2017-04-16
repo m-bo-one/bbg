@@ -1,4 +1,3 @@
-import * as helpers from 'utils/helpers';
 import * as protobuf from "../../../../node_modules/protobufjs/index.js";
 
 class ProtoStream {
@@ -8,16 +7,6 @@ class ProtoStream {
 
         this._ws = new WebSocket(url, ...args);
         this._ws.binaryType = "arraybuffer";
-
-        this.onLoadComplete(() => {
-            this.send("TankReg");
-            let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
-            let callback = (e) => {
-                window.removeEventListener(callbackType, callback);
-                this.send('TankUnreg');
-            };
-            window.addEventListener(callbackType, callback);
-        });
 
         this._ws.onopen = () => {
             console.log('open');

@@ -1,5 +1,5 @@
 {
-    "Debug": false,
+    "Debug": true,
     "CPUCount": 0,
     "Addr": "127.0.0.1:8888",
     "ProxyHost": "localhost:4000",
@@ -9,7 +9,13 @@
         "Redis": {
             "Addr": "127.0.0.1:6379",
             "Password": "",
-            "DB": 0
+            "DB": "0"
+        },
+        "MySQL": {
+            "Addr": "127.0.0.1:3306",
+            "User": "root",
+            "Password": "root",
+            "DB": "bbg"
         }
     }
 }

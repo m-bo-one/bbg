@@ -30,30 +30,30 @@ message TankMove {
 }
 
 message TankGun {
-    required uint32 bullets = 1;
-    required uint32 damage = 2;
+    optional int32 bullets = 1 [default = 3];
+    optional uint32 damage = 2 [default = 10];
 }
 
 message Tank {
     required uint32 id = 1;
     required int32 x = 2;
     required int32 y = 3;
-    required int32 health = 4;
-    required int32 fireRate = 5;
-    required TankGun gun = 6;
-    required int32 speed = 7;
-    required Direction direction = 8;
-    required uint32 width = 9;
-    required uint32 height = 10;
+    optional int32 health = 4 [default = 100];
+    optional int32 fireRate = 5 [default = 100];
+    optional TankGun gun = 6;
+    optional int32 speed = 7 [default = 5];
+    optional Direction direction = 8 [default = N];
+    optional uint32 width = 9 [default = 10];
+    optional uint32 height = 10 [default = 10];
+    optional double angle = 11 [default = 0];
 }
 
 
 message TankUpdate {
 
     enum Status {
-        New = 1;
-        Update = 2;
-        Destroy = 3;
+        Alive = 1;
+        Dead = 2;
     }
 
     required uint32 id = 1;
@@ -70,6 +70,11 @@ message TankUpdate {
     required uint32 damage = 12;
 
     optional uint32 prevId = 20;
+}
+
+message TankReg {
+    required string token = 1;
+    required uint32 tankId = 2;
 }
 
 message TankRemove {
@@ -130,6 +135,7 @@ message BBGProtocol {
     optional TankRemove tankRemove = 14;
     optional TankRotate tankRotate = 15;
     optional TankShoot tankShoot = 16;
+    optional TankReg tankReg = 17;
     optional BulletUpdate bulletUpdate = 20;
     optional MapUpdate mapUpdate = 30;
 

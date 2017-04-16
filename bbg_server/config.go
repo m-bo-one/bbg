@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+type dbParams struct {
+	Addr     string
+	User     string
+	Password string
+	DB       string
+}
+
 type conf struct {
 	Debug           bool
 	CPUCount        int
@@ -18,11 +25,8 @@ type conf struct {
 	SecretKey       string
 	ProxyHost       string
 	Db              struct {
-		Redis struct {
-			Addr     string
-			Password string
-			DB       int
-		}
+		Redis dbParams
+		MySQL dbParams
 	}
 }
 
