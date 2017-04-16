@@ -15,6 +15,7 @@ class GameState extends Phaser.State {
     create() {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.stage.backgroundColor = "#ffffff";
+
         this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
         this.game.tanksGroup = this.game.add.group();
@@ -27,11 +28,10 @@ class GameState extends Phaser.State {
             SPACEBAR: Phaser.Keyboard.SPACEBAR
         });
         this.game.time.advancedTiming = true; // enable FPS
-        this.game.stream = new ProtoStream(`ws://${predefinedVars.wsURL}/game`);
-        this.game.stream.onLoadComplete(() => {
+        this.game.stream = new ProtoStream(`ws://${predefinedVars.wsURL}/game`, () => {
             this.game.stream.send("TankReg", {
                 token: predefinedVars.currentUser.token,
-                tankId: "6a5c7d1fbd4a121ae32dc53edbb0b724"
+                tKey: predefinedVars.currentUser.tanks[0]
             });
             let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
             let callback = (e) => {

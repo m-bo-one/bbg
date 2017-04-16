@@ -68,12 +68,6 @@ func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, w http.ResponseWriter, r
 	client.readPump()
 }
 
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func main() {
 	// Initialize mysql db
 	db, err := MySQLClient(appConf)

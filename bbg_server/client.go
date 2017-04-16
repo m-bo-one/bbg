@@ -85,12 +85,14 @@ func (c *Client) mapToProtobuf() *pb.MapUpdate {
 	}
 }
 
-func (c *Client) getTKey(token string) (string, error) {
+func (c *Client) validateTKey(token string, tKey string) (string, error) {
 	rows, err := c.db.Query(`SELECT tank.tkey
 		FROM authtoken_token AS token
 		INNER JOIN core_tank AS tank
 		ON tank.player_id = token.user_id
-		WHERE token.key =? LIMIT 1`, token)
+		WHERE token.key=?
+		AND tank.tkey=?
+		LIMIT 1;`, token, tKey)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +104,7 @@ func (c *Client) getTKey(token string) (string, error) {
 		}
 		return tKey, nil
 	}
-	return "", errors.New("UID not found")
+	return "", errors.New("tkey not found")
 }
 
 func (c *Client) manageEvent(message *pb.BBGProtocol) error {
@@ -113,7 +115,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		}
 		pk := c.tank.ID
 		if err := c.tank.RemoveTank(); err != nil {
-			return fmt.Errorf("TankUnreg: error: %s", err)
+			return fmt.Errorf("TankUnreg: Remove tank error: %s", err)
 		}
 		c.tank = nil
 		var testID uint32
@@ -123,13 +125,13 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if c.tank != nil {
 			return errors.New("TankReg: Tank already registred for this client")
 		}
-		tKey, err := c.getTKey(message.TankReg.GetToken())
+		tKey, err := c.validateTKey(message.TankReg.GetToken(), message.TankReg.GetTKey())
 		if err != nil {
-			return fmt.Errorf("TankReg: Get tKey error: %s", err)
+			return fmt.Errorf("TankReg: Invalid tKey: %s", err)
 		}
 		tank, err := LoadTank(c, c.redis, tKey)
 		if err != nil {
-			return fmt.Errorf("TankReg: error: %s", err)
+			return fmt.Errorf("TankReg: Load tank error: %s", err)
 		}
 		c.tank = tank
 		c.sendProtoData(pb.BBGProtocol_TankNew, c.tank.ToProtobuf(), false)
@@ -156,7 +158,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 			return errors.New("TankShoot: Tank does not exist")
 		}
 		if err := c.tank.Shoot(message.TankShoot.MouseAxes); err != nil {
-			return fmt.Errorf("TankShoot: error: %s", err)
+			return fmt.Errorf("TankShoot: Got error while shooting: %s", err)
 		}
 
 	default:
@@ -164,7 +166,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		return nil
 	}
 
-	log.Debugf("Incomming message: %+v \n", message)
+	log.Debugf("BBG: Incomming message: %+v \n", message)
 
 	if c.tank != nil {
 		c.sendProtoData(pb.BBGProtocol_TankUpdate, c.tank.ToProtobuf(), true)

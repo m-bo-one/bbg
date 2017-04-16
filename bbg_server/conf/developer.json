@@ -1,5 +1,5 @@
 {
-    "Debug": true,
+    "Debug": false,
     "CPUCount": 0,
     "Addr": "127.0.0.1:8888",
     "ProxyHost": "localhost:4000",

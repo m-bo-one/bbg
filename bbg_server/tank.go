@@ -19,6 +19,7 @@ const (
 type TGun struct {
 	Damage          uint32
 	Bullets         int32
+	Distance        float64
 	needRecharge    bool
 	reloaderStarted bool
 }
@@ -212,8 +213,9 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 		FireRate: pbMsg.GetFireRate(),
 		Speed:    pbMsg.GetSpeed(),
 		TGun: TGun{
-			Bullets: pbMsg.Gun.GetBullets(),
-			Damage:  pbMsg.Gun.GetDamage(),
+			Bullets:  pbMsg.Gun.GetBullets(),
+			Damage:   pbMsg.Gun.GetDamage(),
+			Distance: pbMsg.Gun.GetDistance(),
 		},
 		Cmd: &Cmd{
 			X:         pbMsg.GetX(),
@@ -243,8 +245,9 @@ func (t *Tank) UpdateTank(redis *redis.Client, tKey string) error {
 		Width:    &t.Width,
 		Height:   &t.Height,
 		Gun: &pb.TankGun{
-			Damage:  &t.TGun.Damage,
-			Bullets: &t.TGun.Bullets,
+			Damage:   &t.TGun.Damage,
+			Bullets:  &t.TGun.Bullets,
+			Distance: &t.TGun.Distance,
 		},
 		Angle:     &t.Cmd.Angle,
 		Direction: &t.Cmd.Direction,

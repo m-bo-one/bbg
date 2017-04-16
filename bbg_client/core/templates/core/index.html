@@ -8,14 +8,7 @@
 	<link rel="stylesheet" href="{% static 'build/bootstrap.min.css' %}" type="text/css">
 </head>
 <body>
-    <div class="container">
-        <div id="content"></div>
-        <ul>
-        {% for tank in user.tanks.all %}
-            <li>{{ tank.tkey }}</li>
-        {% endfor %}
-        </ul>
-    </div>
+    <div id="content"></div>
     <script type="text/javascript">
         var predefinedVars = {
             wsURL: "{{ BBG_WS_URL }}",
@@ -28,7 +21,8 @@
             currentUser:
             {% if user.is_authenticated %}
                 {
-                    token: "{{ user.auth_token.key }}"
+                    token: "{{ user.auth_token.key }}",
+                    tanks: {{ user.tkeys|safe }}
                 }
             {% else %}
                 null

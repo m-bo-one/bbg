@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from django_redis import get_redis_connection
 from rest_framework.authtoken.models import Token
+from google.protobuf.message import Message
 
 from protobufs import bbg1_pb2
 
@@ -23,6 +24,9 @@ class BBGUser(AbstractUser):
     @property
     def has_available_tank_slot(self):
         return self.tanks.count() < self.tanks_limit
+
+    def tkeys(self):
+        return [tank.tkey for tank in self.tanks.all()]
 
     class JSONAPIMeta:
         resource_name = "users"
@@ -59,12 +63,26 @@ class RTankProxy(object):
         return self._rget().height
 
     @property
-    def damage(self):
+    def gun_damage(self):
         return self._rget().gun.damage
 
     @property
-    def bullets(self):
+    def gun_bullets(self):
         return self._rget().gun.bullets
+
+    @property
+    def gun_distance(self):
+        return self._rget().gun.distance
+
+    @gun_distance.setter
+    def gun_distance(self, value):
+        self._rupdate(**{
+            'gun': bbg1_pb2.TankGun(
+                damage=self.gun_damage,
+                bullets=self.gun_bullets,
+                distance=float(value),
+            )
+        })
 
     @property
     def direction(self):
@@ -82,9 +100,27 @@ class RTankProxy(object):
 
     def save(self):
         super(RTankProxy, self).save()
-
         if not self._rget():
             self._rcreate()
+
+    def delete(self):
+        super(RTankProxy, self).delete()
+        self._rdel()
+
+    def recreate(self):
+        self._rdel()
+        self._rcreate()
+
+    def _rupdate(self, **kw):
+        tank = self._rget()
+        if tank:
+            for k, v in kw.items():
+                if isinstance(getattr(tank, k), Message):
+                    getattr(tank, k).CopyFrom(v)
+                else:
+                    setattr(tank, k, v)
+            self.redis.hset(self.thash, self.tkey, tank.SerializeToString())
+            return tank
 
     def _rcreate(self):
         tank = bbg1_pb2.Tank(
@@ -92,8 +128,7 @@ class RTankProxy(object):
             x=int(settings.GAME_CONFIG['MAP']['width'] / 2),
             y=int(settings.GAME_CONFIG['MAP']['height'] / 2),
         )
-        buffer = tank.SerializeToString()
-        self.redis.hset(self.thash, self.tkey, buffer)
+        self.redis.hset(self.thash, self.tkey, tank.SerializeToString())
         return tank
 
     def _rget(self):
@@ -102,6 +137,9 @@ class RTankProxy(object):
             tank = bbg1_pb2.Tank()
             tank.ParseFromString(buffer)
             return tank
+
+    def _rdel(self):
+        self.redis.hdel(self.thash, self.tkey)
 
 
 def generate_rtk():

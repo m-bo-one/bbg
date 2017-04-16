@@ -13,12 +13,14 @@ import (
 var bulletIDCounter uint32
 
 type Bullet struct {
-	ID     uint32
-	TankID uint32
-	X, Y   float64
-	Angle  float64
-	Speed  int32
-	Alive  bool
+	ID            uint32
+	TankID        uint32
+	X, Y          float64
+	Angle         float64
+	Speed         int32
+	Alive         bool
+	Distance      float64
+	TotalDistance float64
 
 	sync.Mutex
 }
@@ -37,13 +39,14 @@ func (b *Bullet) GetRadius() int32 {
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	return &pb.BulletUpdate{
-		Id:     &b.ID,
-		TankId: &b.TankID,
-		X:      &b.X,
-		Y:      &b.Y,
-		Angle:  &b.Angle,
-		Speed:  &b.Speed,
-		Alive:  &b.Alive,
+		Id:       &b.ID,
+		TankId:   &b.TankID,
+		X:        &b.X,
+		Y:        &b.Y,
+		Angle:    &b.Angle,
+		Speed:    &b.Speed,
+		Alive:    &b.Alive,
+		Distance: &b.Distance,
 	}
 }
 
@@ -62,6 +65,14 @@ func (b *Bullet) IsColide() (*Tank, bool) {
 	return nil, false
 }
 
+func (b *Bullet) IsOutOfRange() bool {
+	return b.TotalDistance >= b.Distance
+}
+
+func (b *Bullet) UpdateDistance(x float64, y float64) {
+	b.TotalDistance += math.Sqrt(math.Pow(x-b.X, 2) + math.Pow(y-b.Y, 2))
+}
+
 func (b *Bullet) Update(c *Client) {
 	ticker := time.NewTicker(time.Second / TickRate)
 
@@ -76,10 +87,13 @@ func (b *Bullet) Update(c *Client) {
 		select {
 		case <-ticker.C:
 			world.Update(b, func() {
-				b.X += math.Cos(b.Angle) * speed
-				b.Y += math.Sin(b.Angle) * speed
+				nX := b.X + math.Cos(b.Angle)*speed
+				nY := b.Y + math.Sin(b.Angle)*speed
+				b.UpdateDistance(nX, nY)
+				b.X = nX
+				b.Y = nY
 			})
-			if tank, isCollide := b.IsColide(); isCollide {
+			if tank, isCollide := b.IsColide(); isCollide || b.IsOutOfRange() {
 				if tank != nil {
 					log.Fatalf("%+v \n", tank)
 					tank.GetDamage(5)
@@ -91,19 +105,19 @@ func (b *Bullet) Update(c *Client) {
 			c.sendProtoData(pb.BBGProtocol_BulletUpdate, b.ToProtobuf(), true)
 		}
 	}
-
 }
 
 func NewBullet(tank *Tank) (*Bullet, error) {
 	atomic.AddUint32(&bulletIDCounter, 1)
 	b := &Bullet{
-		ID:     bulletIDCounter,
-		TankID: tank.ID,
-		X:      float64(tank.Cmd.X),
-		Y:      float64(tank.Cmd.Y),
-		Speed:  8,
-		Angle:  tank.Cmd.Angle,
-		Alive:  true,
+		ID:       bulletIDCounter,
+		TankID:   tank.ID,
+		X:        float64(tank.Cmd.X),
+		Y:        float64(tank.Cmd.Y),
+		Speed:    8,
+		Angle:    tank.Cmd.Angle,
+		Alive:    true,
+		Distance: tank.TGun.Distance,
 	}
 	world.Add(b)
 	return b, nil

@@ -69,6 +69,12 @@ func AngleFromP2P(iX float64, iY float64, tX float64, tY float64) float64 {
 	return math.Atan2(tY-iY, tX-iX)
 }
 
-func Random(min, max float64) float64 {
+func random(min, max float64) float64 {
 	return rand.Float64()*(max-min) + min
+}
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

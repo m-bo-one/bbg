@@ -2,8 +2,11 @@ import * as protobuf from "../../../../node_modules/protobufjs/index.js";
 
 class ProtoStream {
 
-    constructor(url, ...args) {
+    constructor(url, callback=null, ...args) {
         game.flushMap();
+
+        this._url = url;
+        this._callback = callback;
 
         this._ws = new WebSocket(url, ...args);
         this._ws.binaryType = "arraybuffer";
@@ -22,15 +25,7 @@ class ProtoStream {
         };
         this._ws.onclose = (e) => {
             console.log('ws closed', e);
-            console.log('restarting...');
-            try {
-                setTimeout(() => {
-                    game.stream = new ProtoStream(url, ...args);
-                    console.log('successfully restarted.');
-                }, 2000);
-            } catch (e) {
-                console.log('failed, trying again...');
-            }
+            this.retry(url, callback, ...args);
         };
         this._ws.onerror = (e) => {
             console.log('ws error', e);
@@ -49,6 +44,19 @@ class ProtoStream {
                 ],
             }
         })
+        this.onLoadComplete();
+    }
+
+    retry(url, callback, ...args) {
+        console.log('restarting...');
+        try {
+            setTimeout(() => {
+                game.stream = new ProtoStream(url, callback, ...args);
+                console.log('successfully restarted.');
+            }, 2000);
+        } catch (e) {
+            console.log('failed, trying again...');
+        }
     }
 
     get connected() {
@@ -137,14 +145,14 @@ class ProtoStream {
         });
     }
 
-    onLoadComplete(func) {
+    onLoadComplete() {
         if (!this.connected) {
             setTimeout(() => {
-                this.onLoadComplete(func);
+                this.onLoadComplete();
             }, 1000);
             return;
         }
-        func();
+        if (this._callback !== null) this._callback();
     }
 
 }
