@@ -16,6 +16,9 @@
             "User": "root",
             "Password": "root",
             "DB": "bbg"
+        },
+        "Kafka": {
+            "Addr": "127.0.0.1:9092"
         }
     }
 }

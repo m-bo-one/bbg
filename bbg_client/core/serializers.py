@@ -22,6 +22,7 @@ class TankSerializer(serializers.ModelSerializer):
     death_count = serializers.IntegerField(required=False)
     resurect_count = serializers.IntegerField(required=False)
     lvl = serializers.IntegerField(required=False)
+    kda = serializers.IntegerField(required=False)
     tkey = serializers.CharField(required=False)
 
     player = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -29,9 +30,9 @@ class TankSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tank
         fields = ('player', 'name', 'lvl', 'tkey', 'kill_count', 'death_count',
-                  'resurect_count')
+                  'resurect_count', 'kda')
         read_only_fields = ('lvl', 'tkey', 'kill_count', 'death_count',
-                            'resurect_count')
+                            'resurect_count', 'kda')
 
     def validate_player(self, player):
         if not player.has_available_tank_slot:

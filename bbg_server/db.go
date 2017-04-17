@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	sarama "gopkg.in/Shopify/sarama.v1"
+
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 
@@ -42,4 +44,13 @@ func MySQLClient(appConf *conf) (*sql.DB, error) {
 	}
 	log.Println("STARTER mysql connection")
 	return conn, nil
+}
+
+func KafkaProducer(appConf *conf) (sarama.AsyncProducer, error) {
+	producer, err := sarama.NewAsyncProducer([]string{appConf.Db.Kafka.Addr}, nil)
+	if err != nil {
+		fmt.Println("Error during kafka connection: ", err)
+		return nil, err
+	}
+	return producer, nil
 }

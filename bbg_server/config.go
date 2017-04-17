@@ -27,6 +27,7 @@ type conf struct {
 	Db              struct {
 		Redis dbParams
 		MySQL dbParams
+		Kafka dbParams
 	}
 }
 

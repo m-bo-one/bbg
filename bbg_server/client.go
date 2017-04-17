@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	sarama "gopkg.in/Shopify/sarama.v1"
+
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -24,6 +26,9 @@ type Client struct {
 
 	// redis client
 	redis *redis.Client
+
+	// kafka producer
+	kafkaProducer sarama.AsyncProducer
 
 	// Base ws hub which manages channels
 	hub *Hub
@@ -52,6 +57,14 @@ func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
 func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
 	// TODO
 	return
+}
+
+func (c *Client) sendToPushService(topic string, key string, value string) {
+	c.kafkaProducer.Input() <- &sarama.ProducerMessage{
+		Topic: topic,
+		Key:   sarama.StringEncoder(key),
+		Value: sarama.StringEncoder(value),
+	}
 }
 
 func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all bool) error {

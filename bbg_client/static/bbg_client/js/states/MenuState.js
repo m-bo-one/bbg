@@ -22,7 +22,7 @@ class MenuState extends Phaser.State {
             this.renderForm();
         } else {
             let h1 = document.createElement('h1');
-            h1.textContent = "SELECT TANK";
+            h1.textContent = "Select tank for fight";
             h1.style.textAlign = "center";
             this.game.menu.append(h1);
 
@@ -99,15 +99,19 @@ class MenuState extends Phaser.State {
             e.preventDefault();
             this.game.state.start('GameState', true, true, data);
         };
+        if (data.kda == null) {
+            data.kda = '--';
+        }
         let html = `
-            <div style="border: 1px solid black; margin: auto; height: 120px; border-radius: 10px;" data-tkey="${data.tkey}">
+            <div style="border: 1px solid black; margin: 10px 0 0 0; height: 120px; border-radius: 10px;" data-tkey="${data.tkey}">
                 <img src="${data.avatar}" width="76px" height="76px" style="float: left; margin: 24px 0 0 12px;">
                 <span style="float: left; margin: 12px 0 12px 24px;"><b>Name: ${data.name}</b></span>
                 <div style="float: left; margin: 0 0 0 24px;">
                     <div class="dropdown" style="float: left;">
-                        <button class="dropbtn" style="background-color: grey;">Statictic</button>
+                        <button class="dropbtn" style="background-color: grey;">Statistic</button>
                         <div class="dropdown-content">
                             <span><b>LVL: ${data.lvl}</b></span>
+                            <span><b>KDA: ${data.kda}</b></span>
                             <span><b>Kill count: ${data['kill-count']}</b></span>
                             <span><b>Death count: ${data['death-count']}</b></span>
                             <span><b>Respawn count: ${data['resurect-count']}</b></span>

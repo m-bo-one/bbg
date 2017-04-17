@@ -9,6 +9,12 @@ enum Direction {
     W = 4;
 }
 
+enum StatStatus {
+    Death = 1;
+    Kill = 2;
+    Resurect = 3;
+}
+
 message MouseAxes {
     required double x = 1;
     required double y = 2;

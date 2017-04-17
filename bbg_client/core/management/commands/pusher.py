@@ -1,41 +1,44 @@
-import os
 import asyncio
 import logging
+import concurrent.futures
 
-import django
+from django.core.management.base import BaseCommand, CommandError
+from django.db import close_old_connections
+
 from kafka.common import KafkaError
 from aiokafka import AIOKafkaConsumer
 
-from django.conf import settings
+from core.models import Tank, Stat
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bbg_client.settings")
-django.setup()
 
 logging.basicConfig(level=logging.INFO)
 
 
-class BBGPusher(object):
+class Command(BaseCommand):
 
-    def __init__(self, topics=None):
+    help = 'Kafka push service'
+
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
         self._tasks = []
         self._loop = asyncio.get_event_loop()
-        self._bootstrap_servers = "{host}:{port}".format(
-            host=settings.KAFKA_SETTINGS['server1']['HOST'],
-            port=settings.KAFKA_SETTINGS['server1']['PORT']
-        )
-        self._topics = topics
+        self._topics = ['tank_stat']
         self.consumer = AIOKafkaConsumer(
             *self._topics,
             loop=self._loop,
-            bootstrap_servers=self._bootstrap_servers)
+            bootstrap_servers='localhost')
         self._loop.run_until_complete(self.consumer.start())
+
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 
         for task in [self.listener, self.cron]:
             self._tasks.append(self._loop.create_task(task()))
 
-    def run(self):
+    def handle(self, *args, **options):
         try:
             self._loop.run_forever()
+        except Exception as err:
+            raise CommandError(err)
         finally:
             self._loop.run_until_complete(self.consumer.stop())
             [task.cancel() for task in self._tasks]
@@ -53,7 +56,9 @@ class BBGPusher(object):
                     f_key = 'handle_topic_%s' % msg.topic
                     logging.info("BBGPusher: start process handler %s...: ",
                                  f_key)
-                    await getattr(self, f_key)(msg)
+                    await self._loop.run_in_executor(self._executor,
+                                                     getattr(self, f_key),
+                                                     msg)
             except KafkaError as err:
                 logging.error("BBGPusher: err while consuming message: ", err)
             except AttributeError as err:
@@ -61,8 +66,7 @@ class BBGPusher(object):
             except Exception as err:
                 logging.error("BBGPusher: unexpected exception %s", err)
 
-    async def handle_topic_tank_stat(self, msg):
-        from core.models import Tank, Stat
+    def handle_topic_tank_stat(self, msg):
         logging.info('BBGPusher: receive msg key: %s', msg.key)
 
         key = msg.key
@@ -72,6 +76,7 @@ class BBGPusher(object):
             key = int(key)
 
         if key and key in Stat.EVENT_CHOICES_LIST:
+            close_old_connections()
             try:
                 value = msg.value.decode('utf-8')
                 tank = Tank.objects.get(tkey=value)
@@ -83,8 +88,3 @@ class BBGPusher(object):
                              dict(Stat.EVENT_CHOICES)[key])
 
         logging.info("BBGPusher: handler processing done.")
-
-
-if __name__ == '__main__':
-    pusher = BBGPusher(['tank_stat'])
-    pusher.run()

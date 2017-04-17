@@ -1,4 +1,5 @@
 import BaseElement from 'objects/BaseElement';
+import HealthBar from 'objects/HealthBar';
 
 class Tank extends BaseElement {
 
@@ -39,6 +40,20 @@ class Tank extends BaseElement {
             console.log('Creating new tank...');
             game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
             game.currentTank = game.tanks[data.tankId];
+
+            let healthBar = new HealthBar(game, {
+                width: 100 * 2,
+                height: 20,
+                bar: {
+                  color: 'red'
+                },
+                animationDuration: 500,
+            });
+            healthBar.setPosition(150, game.height - 50)
+            healthBar.setWidth(data.health * 2);
+            game.currentTank.healthBar = healthBar;
+
+            window.bar = healthBar;
 
             let callback = game.currentTank.rotate.bind(game.currentTank);
 
@@ -81,9 +96,14 @@ class Tank extends BaseElement {
         this.tankSprite.destroy();
         this.turretSprite.destroy();
         this.textNick.destroy();
+        if (this === this.game.currentTank) this.healthBar.kill();
     }
 
     update(data) {
+        if (this === this.game.currentTank && data.health != this.health) {
+            this.healthBar.setWidth(data.health * 2);
+        }
+
         this.id = data.tankId;
         this.fireRate = data.fireRate;
         this.health = data.health;

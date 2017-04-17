@@ -13,7 +13,10 @@ class TankViewSet(mixins.CreateModelMixin,
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Tank.objects.all()
+        return (Tank.objects
+                .select_related('player')
+                .prefetch_related('stats')
+                .order_by('created_at'))
 
 
 class UserTankViewSet(mixins.ListModelMixin,
@@ -24,4 +27,8 @@ class UserTankViewSet(mixins.ListModelMixin,
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Tank.objects.filter(player=self.request.user)
+        return (Tank.objects
+                .filter(player=self.request.user)
+                .select_related('player')
+                .prefetch_related('stats')
+                .order_by('created_at'))

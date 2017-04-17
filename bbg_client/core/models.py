@@ -187,6 +187,11 @@ class RTankProxy(object):
         self._rdel()
         self._rcreate()
 
+    def resurect(self):
+        self.health = 100
+        self.x = int(settings.GAME_CONFIG['MAP']['width'] / 2)
+        self.y = int(settings.GAME_CONFIG['MAP']['height'] / 2)
+
     def _rupdate(self, **kw):
         self._rdrop_cache()
         tank = self._rget()
@@ -225,6 +230,19 @@ class RTankProxy(object):
 
     def _rdel(self):
         self.redis.hdel(self.thash, self.tkey)
+
+    def colored_health(self):
+        if 66 < self.health <= 100:
+            color = 'green'
+        elif 33 < self.health <= 66:
+            color = 'orange'
+        else:
+            color = 'red'
+        return '<span style="color: %s;">%s</span>' % (color, self.health)
+
+    colored_health.allow_tags = True
+    colored_health.admin_order_field = 'health'
+    colored_health.short_description = 'health'
 
 
 def generate_rtk():

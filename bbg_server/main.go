@@ -6,6 +6,8 @@ import (
 	"os"
 	"runtime"
 
+	sarama "gopkg.in/Shopify/sarama.v1"
+
 	_ "net/http/pprof"
 
 	"github.com/DeV1doR/bbg/bbg_server/engine"
@@ -52,18 +54,20 @@ func init() {
 	}
 }
 
-func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, w http.ResponseWriter, r *http.Request) {
+func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, kafkaProducer sarama.AsyncProducer,
+	w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
 	client := &Client{
-		db:    db,
-		redis: redis,
-		hub:   hub,
-		conn:  conn,
-		send:  make(chan *pb.BBGProtocol, 1024),
+		db:            db,
+		redis:         redis,
+		kafkaProducer: kafkaProducer,
+		hub:           hub,
+		conn:          conn,
+		send:          make(chan *pb.BBGProtocol, 1024),
 	}
 	client.hub.register <- client
 	go client.writePump()
@@ -81,12 +85,17 @@ func main() {
 	checkErr(err)
 	defer redis.Close()
 
+	// Initialize kafka producer
+	kafkaProducer, err := KafkaProducer(appConf)
+	checkErr(err)
+	defer kafkaProducer.Close()
+
 	// Initialize web socket hub
 	hub := newHub()
 	go hub.run()
 
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
-		serveWS(hub, db, redis, w, r)
+		serveWS(hub, db, redis, kafkaProducer, w, r)
 	})
 
 	log.Infof("Starting server on %s \n", appConf.Addr)

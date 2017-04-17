@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -58,6 +59,7 @@ func (t *Tank) GetDamage(d int32) error {
 		t.Health -= d
 		if t.IsDead() {
 			world.Remove(t)
+			t.WSClient.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.tKey)
 		}
 	}
 	t.Unlock()
