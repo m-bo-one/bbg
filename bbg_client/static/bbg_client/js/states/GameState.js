@@ -5,6 +5,11 @@ import * as helpers from 'utils/helpers';
 
 class GameState extends Phaser.State {
 
+    init(data) {
+        this._token = predefinedVars.currentUser.token;
+        this._tkey = data.tkey;
+    }
+
     preload() {
         this.game.imageLoad('tank', 'sprites/Tank.png');
         this.game.imageLoad('gun-turret', 'sprites/GunTurret.png');
@@ -15,8 +20,8 @@ class GameState extends Phaser.State {
     create() {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.stage.backgroundColor = "#ffffff";
-
         this.game.clearMenu();
+        this.game.startGameSheet();
 
         this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
@@ -32,8 +37,8 @@ class GameState extends Phaser.State {
         this.game.time.advancedTiming = true; // enable FPS
         this.game.stream = new ProtoStream(`ws://${predefinedVars.wsURL}/game`, () => {
             this.game.stream.send("TankReg", {
-                token: predefinedVars.currentUser.token,
-                tKey: predefinedVars.currentUser.tanks[0]
+                token: this._token,
+                tKey: this._tkey
             });
             let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
             let callback = (e) => {

@@ -7,6 +7,7 @@ class Game extends Phaser.Game {
     constructor() {
         super(1024, 768, Phaser.CANVAS, 'content', null);
 
+        this.preMenu = document.getElementById("pre-menu");
         this.menu = document.getElementById("menu");
 
         this.state.add('MainState', MainState, false);
@@ -14,7 +15,11 @@ class Game extends Phaser.Game {
         this.state.add('GameState', GameState, false);
 
         (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
-        // this.state.start('GameState');
+    }
+
+    startGameSheet() {
+        this.preMenu.style.display = 'none';
+        this.canvas.parentElement.style.display = 'block';
     }
 
     clearMenu() {

@@ -19,7 +19,7 @@ var exec = require('child_process').exec;
 
 // Node modules
 var PHASER_PATH = './node_modules/phaser/build';
-var BOOTSTRAP_PATH = './node_modules/bootstrap/dist/css';
+var BOOTSTRAP_PATH = './node_modules/bootstrap/dist';
 var BOOTSTRAP_SOCIAL_PATH = './node_modules/bootstrap-social';
 var FONT_AWESOME_PATH = './node_modules/font-awesome';
 
@@ -108,6 +108,7 @@ function copyJS() {
 
     var srcList = [
         PHASER_PATH + '/phaser.min.js',
+        BOOTSTRAP_PATH + '/js/bootstrap.min.js',
     ];
         
     return gulp.src(srcList)
@@ -118,7 +119,7 @@ function copyJS() {
 function copyCSS() {
 
     var cssList = [
-        BOOTSTRAP_PATH + '/bootstrap.min.css',
+        BOOTSTRAP_PATH + '/css/bootstrap.min.css',
         BOOTSTRAP_SOCIAL_PATH + '/bootstrap-social.css',
         FONT_AWESOME_PATH + '/css/font-awesome.min.css',
         FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.ttf',

@@ -25,6 +25,7 @@ class BBGUser(AbstractUser):
     def has_available_tank_slot(self):
         return self.tanks.count() < self.tanks_limit
 
+    @property
     def tkeys(self):
         return [tank.tkey for tank in self.tanks.all()]
 

@@ -13,4 +13,15 @@ class TankViewSet(mixins.CreateModelMixin,
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
+        return Tank.objects.all()
+
+
+class UserTankViewSet(mixins.ListModelMixin,
+                      GenericViewSet):
+
+    serializer_class = TankSerializer
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
         return Tank.objects.filter(player=self.request.user)

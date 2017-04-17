@@ -1,3 +1,5 @@
+import { toFirstUpperCase } from 'utils/helpers';
+
 class MainState extends Phaser.State {
 
     create() {
@@ -20,7 +22,8 @@ class MainState extends Phaser.State {
         let callback = () => {
             window.location.href = document.location.origin + predefinedVars.socialAuthURL[name];
         };
-        let html = `<span class="fa fa-${name}"></span> Sign in with ${name}`;
+        let socName = toFirstUpperCase(name);
+        let html = `<span class="fa fa-${name}"></span> Sign in with ${socName}`;
         let buttonEl = document.createElement('a');
         buttonEl.className = `btn btn-block btn-social btn-${name}`
         buttonEl.innerHTML = html;
