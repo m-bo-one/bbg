@@ -109,7 +109,7 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		log.Infof("Can't make a shoot. Tank #%d is dead.", t.ID)
 		return nil
 	}
-	if !t.reloaderStarted && t.isFullReloaded() {
+	if !t.reloaderStarted && !t.isFullReloaded() {
 		t.Lock()
 		{
 			t.reloaderStarted = true

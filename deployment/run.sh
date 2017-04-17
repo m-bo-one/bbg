@@ -19,6 +19,11 @@ tmux split-window -d -t 0 -v
 tmux split-window -d -t 1 -h
 tmux split-window -d -t 0 -h
 
+# kafka pusher
+tmux send-keys -t 1 'workon '$ENV enter
+tmux send-keys -t 1 'cd '$DJANGO_APP_DIR enter
+tmux send-keys -t 1 'python pusher.py' enter
+
 # django morda
 tmux send-keys -t 3 'workon '$ENV enter
 tmux send-keys -t 3 'cd '$DJANGO_APP_DIR enter

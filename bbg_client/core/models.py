@@ -235,16 +235,35 @@ def generate_rtk():
     ).hexdigest()
 
 
+class Stat(models.Model):
+
+    DEATH = 1
+    KILL = 2
+    RESURECT = 3
+
+    EVENT_CHOICES = (
+        (DEATH, _("Death")),
+        (KILL, _("Kill")),
+        (RESURECT, _("Resurect")),
+    )
+
+    EVENT_CHOICES_LIST = [choice[0] for choice in EVENT_CHOICES]
+
+    tank = models.ForeignKey('Tank', related_name='stats')
+    event = models.IntegerField(choices=EVENT_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "TID: {tid}; Event: {event}" \
+            .format(tid=self.tank.id, event=self.event)
+
+
 class Tank(RTankProxy, models.Model):
 
     player = models.ForeignKey('BBGUser', related_name='tanks')
     tkey = models.CharField(max_length=32, unique=True, default=generate_rtk)
-
     name = models.CharField(max_length=16)
     lvl = models.BigIntegerField(default=1)
-    kill_count = models.BigIntegerField(default=0)
-    total_steps = models.BigIntegerField(default=0)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class JSONAPIMeta:
@@ -257,11 +276,17 @@ class Tank(RTankProxy, models.Model):
 
         super(Tank, self).save(**kwargs)
 
-    def game_connect(self):
-        pass
+    @property
+    def death_count(self):
+        return self.stats.filter(event=Stat.DEATH).count()
 
-    def game_disconnect(self):
-        pass
+    @property
+    def kill_count(self):
+        return self.stats.filter(event=Stat.KILL).count()
+
+    @property
+    def resurect_count(self):
+        return self.stats.filter(event=Stat.DEATH).count()
 
     def __str__(self):
         return "Player: {player}; Tank: {name}; LvL: {lvl}" \

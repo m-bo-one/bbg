@@ -225,6 +225,13 @@ GAME_CONFIG = {
     }
 }
 
+KAFKA_SETTINGS = {
+    'server1': {
+        'HOST': 'localhost',
+        'PORT': 9092
+    }
+}
+
 try:
     from settings_local import *
 except ImportError:
