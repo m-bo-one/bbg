@@ -1,17 +1,17 @@
-# bbg
-========
+bbg
+===
 
 bbg online tanks
 
 ## Build system requirements
 ****************
-Go 1.8
-Kafka 1.10.1
-Python 3.5
-Django 1.9
-nodejs v4.2.6
-npm 3.5.2
-MySQL 5.7
+Go 1.8<br>
+Kafka 1.10.1<br>
+Python 3.5<br>
+Django 1.9<br>
+nodejs v4.2.6<br>
+npm 3.5.2<br>
+MySQL 5.7<br>
 
 ## Deployment scripts
 ****************
