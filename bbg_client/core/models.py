@@ -277,6 +277,13 @@ class Tank(RTankProxy, models.Model):
         super(Tank, self).save(**kwargs)
 
     @property
+    def kda(self):
+        try:
+            return self.kill_count / self.death_count
+        except ZeroDivisionError:
+            return None
+
+    @property
     def death_count(self):
         return self.stats.filter(event=Stat.DEATH).count()
 

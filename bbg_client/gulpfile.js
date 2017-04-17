@@ -20,6 +20,8 @@ var exec = require('child_process').exec;
 // Node modules
 var PHASER_PATH = './node_modules/phaser/build';
 var BOOTSTRAP_PATH = './node_modules/bootstrap/dist/css';
+var BOOTSTRAP_SOCIAL_PATH = './node_modules/bootstrap-social';
+var FONT_AWESOME_PATH = './node_modules/font-awesome';
 
 // App pathes
 var SERVER_PATH = './../bbg_server';
@@ -117,6 +119,13 @@ function copyCSS() {
 
     var cssList = [
         BOOTSTRAP_PATH + '/bootstrap.min.css',
+        BOOTSTRAP_SOCIAL_PATH + '/bootstrap-social.css',
+        FONT_AWESOME_PATH + '/css/font-awesome.min.css',
+        FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.ttf',
+        FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.woff',
+        FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.woff2',
+        FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.eot',
+        FONT_AWESOME_PATH + '/fonts/fontawesome-webfont.svg',
     ];
 
     return gulp.src(cssList)

@@ -1,33 +1,32 @@
 class MainState extends Phaser.State {
 
-    preload() {
-        this.game.imageLoad('github', 'social/github.png');
-        this.game.imageLoad('facebook', 'social/facebook.png');
-    }
-
     create() {
         this.stage.backgroundColor = "#ffffff";
         this.game.canvas.style.border = "1px solid black";
-        this.buttonGroup = this.game.add.group();
 
-        let offset = this.game.world.centerY;
+        this.game.clearMenu();
 
-        let header = this.game.add.text(this.game.world.centerX, offset - 40, 'BBG TANKS');
-        header.anchor.set(0.5);
-        this.buttonGroup.add(header);
+        let colEl = document.createElement('div');
+        colEl.className = "col-md-offset-1 col-md-11";
+        colEl.style.float = "none";
+        colEl.style.marginTop = "100%";
+        this.game.menu.append(colEl);
 
-        this.socialButtonCreate(this.game.world.centerX, offset, 'github');
-        this.socialButtonCreate(this.game.world.centerX, offset + 40, 'facebook');
+        this.socialButtonCreate(colEl, 'facebook');
+        this.socialButtonCreate(colEl, 'github');
     }
 
-    socialButtonCreate(x, y, name, scale=0.5) {
+    socialButtonCreate(parent, name) {
         let callback = () => {
-            window.location.href = predefinedVars.socialAuthURL[name];
+            window.location.href = document.location.origin + predefinedVars.socialAuthURL[name];
         };
-        let icon = this.game.add.button(x, y, name, callback, this, 2, 1, 0);
-        icon.scale.setTo(scale);
-        icon.anchor.setTo(scale);
-        this.buttonGroup.add(icon);
+        let html = `<span class="fa fa-${name}"></span> Sign in with ${name}`;
+        let buttonEl = document.createElement('a');
+        buttonEl.className = `btn btn-block btn-social btn-${name}`
+        buttonEl.innerHTML = html;
+        buttonEl.addEventListener('click', callback);
+    
+        parent.append(buttonEl);
     }
 
 }

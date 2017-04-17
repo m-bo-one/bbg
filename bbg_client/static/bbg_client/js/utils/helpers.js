@@ -23,26 +23,39 @@ export const getCookie = (key) => {
 }
 
 export const makeRequest = (rData) => {
+    let method = rData.method;
+    if (!method) {
+        method = 'GET';
+    }
     let prepareDict = {
         'type': rData.type,
         'attributes': rData.data
     };
-    if (rData.method == 'PATCH' || rData.method == 'DELETE') {
+    if (method == 'PATCH' || method == 'DELETE') {
         prepareDict.id = rData.data['id'] || null;
     }
     let url = rData.url.replace(/\/$/, '');
-    return fetch(`/api/v1/${url}/`, {
-        method: 'POST',
+
+    if (method != 'GET') {
+        let body = JSON.stringify({data: prepareDict});
+    } else {
+        let body = null;
+    }
+
+    let sendData = {
+        method: method,
         headers: {
             'Content-Type': 'application/vnd.api+json',
             'Authorization': `Token ${predefinedVars.currentUser.token}`,
             'X-CSRFToken': getCookie('csrfmiddlewaretoken')
-        },
-        body: JSON.stringify({
-            data: prepareDict
-        })
-    })
-    .then(function(response) {
-        return response.json();
+        }
+    }
+    if (method != 'GET') {
+        sendData.body = JSON.stringify({data: prepareDict});
+    }
+    return fetch(`/api/v1/${url}/`, sendData).then(function(resp) {
+        if (resp.status == 200) {
+            return resp.json();
+        }
     });
 }

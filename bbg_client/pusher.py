@@ -30,16 +30,20 @@ class BBGPusher(object):
             bootstrap_servers=self._bootstrap_servers)
         self._loop.run_until_complete(self.consumer.start())
 
-        self._tasks.append(self._loop.create_task(self.listener()))
+        for task in [self.listener, self.cron]:
+            self._tasks.append(self._loop.create_task(task()))
 
     def run(self):
         try:
             self._loop.run_forever()
         finally:
             self._loop.run_until_complete(self.consumer.stop())
-            for task in self._tasks:
-                task.cancel()
+            [task.cancel() for task in self._tasks]
             self._loop.close()
+
+    async def cron(self):
+        while True:
+            await asyncio.sleep(10)
 
     async def listener(self):
         while True:

@@ -6,12 +6,19 @@ class Game extends Phaser.Game {
 
     constructor() {
         super(1024, 768, Phaser.CANVAS, 'content', null);
+
+        this.menu = document.getElementById("menu");
+
         this.state.add('MainState', MainState, false);
         this.state.add('MenuState', MenuState, false);
         this.state.add('GameState', GameState, false);
 
-        (predefinedVars.currentUser !== null) ? this.state.start('GameState') : this.state.start('MainState');
+        (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
         // this.state.start('GameState');
+    }
+
+    clearMenu() {
+        this.menu.innerHTML = "";
     }
 
     create() {

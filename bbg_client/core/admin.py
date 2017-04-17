@@ -16,9 +16,9 @@ class BBGUserAdmin(admin.ModelAdmin):
 @admin.register(Tank)
 class TankAdmin(admin.ModelAdmin):
 
-    list_display = ('name', 'tkey', 'lvl', 'kill_count', 'created_at')
+    list_display = ('name', 'tkey', 'lvl', 'kda', 'created_at')
 
-    readonly_fields = ('tkey', 'lvl', 'created_at',
+    readonly_fields = ('tkey', 'lvl', 'created_at', 'kda',
                        'x', 'y', 'health', 'fire_rate', 'speed', 'direction',
                        'width', 'height', 'angle',
                        'gun_damage', 'gun_bullets', 'gun_distance', 'nickname',
@@ -29,7 +29,7 @@ class TankAdmin(admin.ModelAdmin):
             'fields': ('player', 'name', 'tkey', 'lvl', 'created_at'),
         }),
         ('Tank stats', {
-            'fields': ('death_count', 'kill_count', 'resurect_count'),
+            'fields': ('kda', 'death_count', 'kill_count', 'resurect_count'),
         }),
         ('Tank current position', {
             'classes': ('extrapretty',),
