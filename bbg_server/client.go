@@ -1,16 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
-	sarama "gopkg.in/Shopify/sarama.v1"
-
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
-	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
@@ -21,15 +17,6 @@ const (
 )
 
 type Client struct {
-	// sql client
-	db *sql.DB
-
-	// redis client
-	redis *redis.Client
-
-	// kafka producer
-	kafkaProducer sarama.AsyncProducer
-
 	// Base ws hub which manages channels
 	hub *Hub
 
@@ -41,30 +28,6 @@ type Client struct {
 
 	// Client tank model
 	tank *Tank
-}
-
-func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
-	hub.RLock()
-	defer hub.RUnlock()
-	for client, active := range hub.clients {
-		if active && client.tank != nil {
-			tanks = append(tanks, client.tank.ToProtobuf())
-		}
-	}
-	return
-}
-
-func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
-	// TODO
-	return
-}
-
-func (c *Client) sendToPushService(topic string, key string, value string) {
-	c.kafkaProducer.Input() <- &sarama.ProducerMessage{
-		Topic: topic,
-		Key:   sarama.StringEncoder(key),
-		Value: sarama.StringEncoder(value),
-	}
 }
 
 func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all bool) error {
@@ -101,7 +64,7 @@ func (c *Client) mapToProtobuf() *pb.MapUpdate {
 }
 
 func (c *Client) validateTKey(token string, tKey string) (string, error) {
-	rows, err := c.db.Query(`SELECT tank.tkey
+	rows, err := c.hub.mysql.Query(`SELECT tank.tkey
 		FROM authtoken_token AS token
 		INNER JOIN core_tank AS tank
 		ON tank.player_id = token.user_id
@@ -144,7 +107,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if err != nil {
 			return fmt.Errorf("TankReg: Invalid tKey: %s", err)
 		}
-		tank, err := LoadTank(c, c.redis, tKey)
+		tank, err := LoadTank(c, c.hub.redis, tKey)
 		if err != nil {
 			return fmt.Errorf("TankReg: Load tank error: %s", err)
 		}
@@ -197,7 +160,7 @@ func (c *Client) readPump() {
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	for {
-		log.Infoln("readPump GOGOGO")
+		log.Debugln("readPump GOGOGO")
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
@@ -247,7 +210,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			log.Infoln("writePump - writing...")
+			log.Debugln("writePump - writing...")
 			w.Write(encoded)
 
 			if err := w.Close(); err != nil {

@@ -1,19 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 	"os"
 	"runtime"
-
-	sarama "gopkg.in/Shopify/sarama.v1"
 
 	_ "net/http/pprof"
 
 	"github.com/DeV1doR/bbg/bbg_server/engine"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
-	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
 )
 
@@ -48,26 +44,22 @@ func init() {
 	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 
 	if !appConf.Debug {
-		log.SetLevel(log.ErrorLevel)
+		log.SetLevel(log.InfoLevel)
 	} else {
 		log.SetLevel(log.DebugLevel)
 	}
 }
 
-func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, kafkaProducer sarama.AsyncProducer,
-	w http.ResponseWriter, r *http.Request) {
+func serveWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
 	client := &Client{
-		db:            db,
-		redis:         redis,
-		kafkaProducer: kafkaProducer,
-		hub:           hub,
-		conn:          conn,
-		send:          make(chan *pb.BBGProtocol, 1024),
+		hub:  hub,
+		conn: conn,
+		send: make(chan *pb.BBGProtocol, 1024),
 	}
 	client.hub.register <- client
 	go client.writePump()
@@ -75,27 +67,18 @@ func serveWS(hub *Hub, db *sql.DB, redis *redis.Client, kafkaProducer sarama.Asy
 }
 
 func main() {
-	// Initialize mysql db
-	db, err := MySQLClient(appConf)
+	// Initialize new db client
+	dbClient, err := NewDBClient(appConf)
 	checkErr(err)
-	defer db.Close()
-
-	// Initialize redis db
-	redis, err := RedisClient(appConf)
-	checkErr(err)
-	defer redis.Close()
-
-	// Initialize kafka producer
-	kafkaProducer, err := KafkaProducer(appConf)
-	checkErr(err)
-	defer kafkaProducer.Close()
+	defer dbClient.Close()
 
 	// Initialize web socket hub
-	hub := newHub()
+	hub := NewHub(*dbClient)
 	go hub.run()
+	go hub.listenPushService("tank_update", 0)
 
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
-		serveWS(hub, db, redis, kafkaProducer, w, r)
+		serveWS(hub, w, r)
 	})
 
 	log.Infof("Starting server on %s \n", appConf.Addr)

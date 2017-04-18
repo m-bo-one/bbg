@@ -42,7 +42,7 @@ message TankGun {
 }
 
 message Tank {
-    required uint32 id = 1;
+    required string id = 1;
     required int32 x = 2;
     required int32 y = 3;
     optional int32 health = 4 [default = 100];
@@ -65,7 +65,7 @@ message TankUpdate {
     }
 
     required uint32 id = 1;
-    required uint32 tankId = 2;
+    required string tankId = 2;
     required int32 x = 3;
     required int32 y = 4;
     required int32 health = 5;
@@ -88,7 +88,7 @@ message TankReg {
 
 message TankRemove {
     required uint32 id = 1;
-    required uint32 tankId = 2;
+    required string tankId = 2;
     optional uint32 prevId = 20;
 }
 
@@ -102,7 +102,7 @@ message TankShoot {
 
 message BulletUpdate {
     required uint32 id = 1;
-    required uint32 tankId = 2;
+    required string tankId = 2;
     required double x = 3;
     required double y = 4;
     required double angle = 5;

@@ -26,7 +26,8 @@ class Command(BaseCommand):
         self.consumer = AIOKafkaConsumer(
             *self._topics,
             loop=self._loop,
-            bootstrap_servers='localhost')
+            bootstrap_servers='localhost:9092')
+
         self._loop.run_until_complete(self.consumer.start())
 
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)

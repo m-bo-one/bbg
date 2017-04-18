@@ -25,7 +25,10 @@ class GameState extends Phaser.State {
 
         this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
-        this.game.tanksGroup = this.game.add.group();
+
+        this.game.backLayer = this.game.add.group();
+        this.game.midLayer = this.game.add.group();
+        this.game.frontLayer = this.game.add.group();
 
         this.cursors = this.game.input.keyboard.addKeys({
             W: Phaser.Keyboard.W,

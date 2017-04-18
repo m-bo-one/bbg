@@ -20,7 +20,7 @@ class MainState extends Phaser.State {
 
     socialButtonCreate(parent, name) {
         let callback = () => {
-            window.location.href = document.location.origin + predefinedVars.socialAuthURL[name];
+            window.location.href = window.location.origin + predefinedVars.socialAuthURL[name];
         };
         let socName = toFirstUpperCase(name);
         let html = `<span class="fa fa-${name}"></span> Sign in with ${socName}`;

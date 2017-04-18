@@ -14,7 +14,7 @@ var bulletIDCounter uint32
 
 type Bullet struct {
 	ID            uint32
-	TankID        uint32
+	Tank          *Tank
 	X, Y          float64
 	Angle         float64
 	Speed         int32
@@ -42,7 +42,7 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	defer b.Unlock()
 	return &pb.BulletUpdate{
 		Id:       &b.ID,
-		TankId:   &b.TankID,
+		TankId:   &b.Tank.ID,
 		X:        &b.X,
 		Y:        &b.Y,
 		Angle:    &b.Angle,
@@ -58,7 +58,7 @@ func (b *Bullet) IsColide() (*Tank, bool) {
 	}
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
-			if tank.ID != b.TankID {
+			if tank != b.Tank {
 				log.Debugf("Collided with: %+v \n", tank)
 				return tank, true
 			}
@@ -112,7 +112,7 @@ func NewBullet(tank *Tank) (*Bullet, error) {
 	atomic.AddUint32(&bulletIDCounter, 1)
 	b := &Bullet{
 		ID:       bulletIDCounter,
-		TankID:   tank.ID,
+		Tank:     tank,
 		X:        float64(tank.Cmd.X),
 		Y:        float64(tank.Cmd.Y),
 		Speed:    8,

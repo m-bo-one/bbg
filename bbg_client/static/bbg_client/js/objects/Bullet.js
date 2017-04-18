@@ -12,6 +12,7 @@ class Bullet extends BaseElement {
         this.bulletSprite = this.game.add.sprite(x, y, key);
         this.bulletSprite.scale.setTo(0.25, 0.25);
         this.bulletSprite.anchor.setTo(0.5, 0.5);
+        this.game.midLayer.add(this.bulletSprite);
 
         this.update(data);
 

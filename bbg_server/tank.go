@@ -26,7 +26,7 @@ type TGun struct {
 }
 
 type Tank struct {
-	ID            uint32
+	ID            string
 	Name          string
 	Health        int32
 	FireRate      int32
@@ -35,7 +35,6 @@ type Tank struct {
 	LastShoot     int64
 	Cmd           *Cmd
 	WSClient      *Client
-	tKey          string
 
 	TGun
 	sync.Mutex
@@ -54,16 +53,12 @@ func (t *Tank) GetRadius() int32 {
 }
 
 func (t *Tank) GetDamage(d int32) error {
-	t.Lock()
-	{
-		t.Health -= d
-		if t.IsDead() {
-			world.Remove(t)
-			t.WSClient.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.tKey)
-		}
+	atomic.AddInt32(&t.Health, -d)
+	if t.IsDead() {
+		world.Remove(t)
+		t.WSClient.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
 	}
-	t.Unlock()
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 	return nil
 }
 
@@ -78,7 +73,7 @@ func (t *Tank) restoreBullet() bool {
 		return true
 	}
 	atomic.AddInt32(&t.Bullets, 1)
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 	return false
 }
 
@@ -142,8 +137,7 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		return err
 	}
 	go bullet.Update(t.WSClient)
-
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 
 	return nil
 }
@@ -173,11 +167,13 @@ func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 		return nil
 	}
 	t.Lock()
-	t.Cmd.MouseAxes.X = *axes.X
-	t.Cmd.MouseAxes.Y = *axes.Y
-	t.UpdateAngle()
+	{
+		t.Cmd.MouseAxes.X = *axes.X
+		t.Cmd.MouseAxes.Y = *axes.Y
+		t.UpdateAngle()
+	}
 	t.Unlock()
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 	return nil
 }
 
@@ -204,7 +200,7 @@ func (t *Tank) Move(direction *pb.Direction) error {
 		}
 		t.Unlock()
 	})
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 	return nil
 }
 
@@ -265,13 +261,43 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 			MouseAxes: &MouseAxes{},
 		},
 		WSClient: c,
-		tKey:     tKey,
 	}
 	world.Add(tank)
 	return tank, nil
 }
 
-func (t *Tank) UpdateTank(redis *redis.Client, tKey string) error {
+func (t *Tank) Update(pbMsg *pb.Tank) error {
+	t.Lock()
+	{
+		t.ID = pbMsg.GetId()
+		t.Cmd.X = pbMsg.GetX()
+		t.Cmd.Y = pbMsg.GetY()
+		t.Name = pbMsg.GetName()
+		t.Health = pbMsg.GetHealth()
+		t.Speed = pbMsg.GetSpeed()
+		t.FireRate = pbMsg.GetFireRate()
+		t.Width = pbMsg.GetWidth()
+		t.Height = pbMsg.GetHeight()
+		t.TGun.Bullets = pbMsg.Gun.GetBullets()
+		t.TGun.Damage = pbMsg.Gun.GetDamage()
+		t.TGun.Distance = pbMsg.Gun.GetDistance()
+		t.Cmd.Angle = pbMsg.GetAngle()
+		t.Cmd.Direction = pbMsg.GetDirection()
+	}
+	t.Unlock()
+
+	encoded, err := proto.Marshal(pbMsg)
+	if err != nil {
+		return err
+	}
+	if _, err := t.WSClient.hub.redis.HSet(tHash, t.ID, encoded).Result(); err != nil {
+		return err
+	}
+	log.Debugf("Updateing tank #%s to redis...", t.ID)
+	return nil
+}
+
+func (t *Tank) Save() error {
 	var pbMsg *pb.Tank
 	t.Lock()
 	{
@@ -300,15 +326,15 @@ func (t *Tank) UpdateTank(redis *redis.Client, tKey string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := redis.HSet(tHash, tKey, encoded).Result(); err != nil {
+	if _, err := t.WSClient.hub.redis.HSet(tHash, t.ID, encoded).Result(); err != nil {
 		return err
 	}
-	log.Debugf("Send update for tank #%d to redis...", t.ID)
+	log.Debugf("Saving tank #%s to redis...", t.ID)
 	return nil
 }
 
 func (t *Tank) RemoveTank() error {
 	world.Remove(t)
-	t.UpdateTank(t.WSClient.redis, t.tKey)
+	t.Save()
 	return nil
 }

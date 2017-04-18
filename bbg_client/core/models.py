@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 
+from kafka import KafkaProducer
 from django_redis import get_redis_connection
 from rest_framework.authtoken.models import Token
 from google.protobuf.message import Message
@@ -34,6 +35,14 @@ class BBGUser(AbstractUser):
 
 
 class RTankProxy(object):
+
+    kproducer = KafkaProducer(bootstrap_servers='localhost:9092',
+                              key_serializer=str.encode)
+
+    def send_update(self):
+        self.kproducer.send('tank_update',
+                            key=self.tkey,
+                            value=self._rget().SerializeToString())
 
     @property
     def x(self):
@@ -192,6 +201,8 @@ class RTankProxy(object):
         self.x = int(settings.GAME_CONFIG['MAP']['width'] / 2)
         self.y = int(settings.GAME_CONFIG['MAP']['height'] / 2)
 
+        self.send_update()
+
     def _rupdate(self, **kw):
         self._rdrop_cache()
         tank = self._rget()
@@ -206,7 +217,7 @@ class RTankProxy(object):
 
     def _rcreate(self):
         tank = bbg1_pb2.Tank(
-            id=self.pk,
+            id=self.tkey,
             x=int(settings.GAME_CONFIG['MAP']['width'] / 2),
             y=int(settings.GAME_CONFIG['MAP']['height'] / 2),
             name=self.name

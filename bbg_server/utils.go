@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
+
+	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 )
 
 func Keys(v interface{}) ([]string, error) {
@@ -77,4 +79,20 @@ func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
+	hub.RLock()
+	defer hub.RUnlock()
+	for client, active := range hub.clients {
+		if active && client.tank != nil {
+			tanks = append(tanks, client.tank.ToProtobuf())
+		}
+	}
+	return
+}
+
+func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
+	// TODO
+	return
 }
