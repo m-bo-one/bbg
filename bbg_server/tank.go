@@ -52,11 +52,14 @@ func (t *Tank) GetRadius() int32 {
 	return int32(t.Width+t.Height) / 2
 }
 
-func (t *Tank) GetDamage(d int32) error {
-	atomic.AddInt32(&t.Health, -d)
+func (t *Tank) GetDamage(b *Bullet) error {
+	atomic.AddInt32(&t.Health, -int32(b.Tank.Damage))
 	if t.IsDead() {
 		world.Remove(t)
 		t.WSClient.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
+		if b.Tank != nil {
+			b.Tank.WSClient.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
+		}
 	}
 	t.Save()
 	return nil
@@ -103,7 +106,7 @@ func (t *Tank) isFullReloaded() bool {
 
 func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 	if t.IsDead() {
-		log.Infof("Can't make a shoot. Tank #%d is dead.", t.ID)
+		log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
 		return nil
 	}
 	if !t.reloaderStarted && !t.isFullReloaded() {
@@ -163,7 +166,7 @@ func (t *Tank) IsDead() bool {
 // TurretRotate make tank turret rotating around its axis
 func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 	if t.IsDead() {
-		log.Infof("Can't make a turret rotation. Tank #%d is dead.", t.ID)
+		log.Infof("Can't make a turret rotation. Tank #%s is dead.", t.ID)
 		return nil
 	}
 	t.Lock()
@@ -179,7 +182,7 @@ func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 
 func (t *Tank) Move(direction *pb.Direction) error {
 	if t.IsDead() {
-		log.Infof("Can't make a move. Tank #%d is dead.", t.ID)
+		log.Infof("Can't make a move. Tank #%s is dead.", t.ID)
 		return nil
 	}
 	world.Update(t, func() {

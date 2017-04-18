@@ -184,6 +184,7 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	defer func() {
+		c.hub.unregister <- c
 		c.conn.Close()
 	}()
 	for {

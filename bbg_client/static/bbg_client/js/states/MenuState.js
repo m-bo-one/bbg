@@ -111,10 +111,10 @@ class MenuState extends Phaser.State {
                         <button class="dropbtn" style="background-color: grey;">Statistic</button>
                         <div class="dropdown-content">
                             <span><b>LVL: ${data.lvl}</b></span>
-                            <span><b>KDA: ${data.kda}</b></span>
+                            <span><b>Scores: ${data['scores-count']}</b></span>
+                            <span><b>KDA: ${data.kda.toFixed(2)}</b></span>
                             <span><b>Kill count: ${data['kill-count']}</b></span>
                             <span><b>Death count: ${data['death-count']}</b></span>
-                            <span><b>Respawn count: ${data['resurect-count']}</b></span>
                         </div>
                     </div>
                     <button class="btn btn-success" style="float: left; margin: 10px 0 0 24px;">SMASH!</button>
@@ -126,6 +126,8 @@ class MenuState extends Phaser.State {
         blockEl.className = 'row';
 
         parent.appendChild(blockEl);
+
+        console.log(data);
 
         document.querySelector(`[data-tkey="${data.tkey}"] > div > button`).addEventListener('click', callback);
     }

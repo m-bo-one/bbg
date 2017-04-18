@@ -59,7 +59,8 @@ func (b *Bullet) IsColide() (*Tank, bool) {
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
 			if tank != b.Tank {
-				log.Debugf("Collided with: %+v \n", tank)
+				log.Errorf("Collided with: %+v \n", tank)
+				log.Errorf("%p == %p \n", tank, b.Tank)
 				return tank, true
 			}
 		}
@@ -97,7 +98,7 @@ func (b *Bullet) Update(c *Client) {
 			})
 			if tank, isCollide := b.IsColide(); isCollide || b.IsOutOfRange() {
 				if tank != nil {
-					tank.GetDamage(5)
+					tank.GetDamage(b)
 					c.sendProtoData(pb.BBGProtocol_TankUpdate, tank.ToProtobuf(), true)
 				}
 				b.Alive = false

@@ -146,6 +146,7 @@ class Tank extends BaseElement {
     }
 
     fire() {
+        if (this.isDead()) return;
         this.syncData('TankShoot', {
             x: this.x,
             y: this.y,

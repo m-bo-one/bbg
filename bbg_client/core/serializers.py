@@ -17,22 +17,14 @@ class BBGUserSerializer(serializers.ModelSerializer):
 
 class TankSerializer(serializers.ModelSerializer):
 
-    player = BBGUserSerializer()
-    kill_count = serializers.IntegerField(required=False)
-    death_count = serializers.IntegerField(required=False)
-    resurect_count = serializers.IntegerField(required=False)
-    lvl = serializers.IntegerField(required=False)
-    kda = serializers.IntegerField(required=False)
-    tkey = serializers.CharField(required=False)
-
     player = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Tank
-        fields = ('player', 'name', 'lvl', 'tkey', 'kill_count', 'death_count',
-                  'resurect_count', 'kda')
-        read_only_fields = ('lvl', 'tkey', 'kill_count', 'death_count',
-                            'resurect_count', 'kda')
+        fields = ('player', 'name', 'lvl', 'tkey', 'kda',
+                  'kill_count', 'death_count', 'scores_count')
+        read_only_fields = ('lvl', 'tkey', 'kill_count', 'death_count', 'kda',
+                            'scores_count')
 
     def validate_player(self, player):
         if not player.has_available_tank_slot:

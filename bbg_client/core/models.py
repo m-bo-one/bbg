@@ -3,6 +3,7 @@ import random
 import uuid
 
 from django.db import models
+from django.db.models import Sum
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -269,12 +270,10 @@ class Stat(models.Model):
 
     DEATH = 1
     KILL = 2
-    RESURECT = 3
 
     EVENT_CHOICES = (
         (DEATH, _("Death")),
         (KILL, _("Kill")),
-        (RESURECT, _("Resurect")),
     )
 
     EVENT_CHOICES_LIST = [choice[0] for choice in EVENT_CHOICES]
@@ -286,6 +285,17 @@ class Stat(models.Model):
     def __str__(self):
         return "TID: {tid}; Event: {event}" \
             .format(tid=self.tank.id, event=self.event)
+
+
+class Score(models.Model):
+
+    tank = models.ForeignKey('Tank', related_name='scores')
+    value = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "TID: {tid}; Value: {value}" \
+            .format(tid=self.tank.id, event=self.value)
 
 
 class Tank(RTankProxy, models.Model):
@@ -312,6 +322,10 @@ class Tank(RTankProxy, models.Model):
             return self.kill_count / self.death_count
         except ZeroDivisionError:
             return None
+
+    @property
+    def scores_count(self):
+        return self.scores.aggregate(sum=Sum('value'))['sum'] or 0
 
     @property
     def death_count(self):

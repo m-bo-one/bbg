@@ -34,16 +34,16 @@ class TankAdmin(admin.ModelAdmin):
 
     readonly_fields = ('tkey', 'lvl', 'created_at', 'kda',
                        'x', 'y', 'colored_health', 'fire_rate', 'speed',
-                       'direction', 'width', 'height', 'angle',
+                       'direction', 'width', 'height', 'angle', 'scores_count',
                        'gun_damage', 'gun_bullets', 'gun_distance', 'nickname',
-                       'kill_count', 'death_count', 'resurect_count')
+                       'kill_count', 'death_count')
 
     fieldsets = (
         ('Tank info', {
             'fields': ('player', 'name', 'tkey', 'lvl', 'created_at'),
         }),
         ('Tank stats', {
-            'fields': ('kda', 'death_count', 'kill_count', 'resurect_count'),
+            'fields': ('kda', 'scores_count', 'death_count', 'kill_count'),
         }),
         ('Tank current position', {
             'classes': ('extrapretty',),
