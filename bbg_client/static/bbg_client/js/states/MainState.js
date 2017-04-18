@@ -12,7 +12,7 @@ class MainState extends Phaser.State {
         colEl.className = "col-md-offset-1 col-md-11";
         colEl.style.float = "none";
         colEl.style.marginTop = "100%";
-        this.game.menu.append(colEl);
+        this.game.menu.appendChild(colEl);
 
         this.socialButtonCreate(colEl, 'facebook');
         this.socialButtonCreate(colEl, 'github');
@@ -29,7 +29,7 @@ class MainState extends Phaser.State {
         buttonEl.innerHTML = html;
         buttonEl.addEventListener('click', callback);
     
-        parent.append(buttonEl);
+        parent.appendChild(buttonEl);
     }
 
 }

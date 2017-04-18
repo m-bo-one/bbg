@@ -12,19 +12,19 @@ class MenuState extends Phaser.State {
             let h2 = document.createElement('h2');
             h2.textContent = "New one?";
             h2.style.textAlign = "center";
-            this.game.menu.append(h2);
+            this.game.menu.appendChild(h2);
 
             let h4 = document.createElement('h4');
             h4.textContent = "Create tank and go fight!";
             h4.style.textAlign = "center";
-            this.game.menu.append(h4);
+            this.game.menu.appendChild(h4);
 
             this.renderForm();
         } else {
             let h1 = document.createElement('h1');
             h1.textContent = "Select tank for fight";
             h1.style.textAlign = "center";
-            this.game.menu.append(h1);
+            this.game.menu.appendChild(h1);
 
             this.renderTanks();
         }
@@ -68,7 +68,7 @@ class MenuState extends Phaser.State {
 
         blockEl.querySelector('button').addEventListener('click', callback);
 
-        this.game.menu.append(blockEl);
+        this.game.menu.appendChild(blockEl);
     }
 
     clearFormErrors() {
@@ -90,7 +90,7 @@ class MenuState extends Phaser.State {
         errors.map((el) => {
             ulBlock.innerHTML += `<li>${el.detail}</li>`;
         });
-        errBlock.append(ulBlock);
+        errBlock.appendChild(ulBlock);
         console.log(errors);
     }
 
@@ -125,7 +125,7 @@ class MenuState extends Phaser.State {
         blockEl.innerHTML = html;
         blockEl.className = 'row';
 
-        parent.append(blockEl);
+        parent.appendChild(blockEl);
 
         document.querySelector(`[data-tkey="${data.tkey}"] > div > button`).addEventListener('click', callback);
     }

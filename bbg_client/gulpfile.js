@@ -50,6 +50,10 @@ function isProduction() {
     return (typeof(argv.production) !== 'undefined') ? true : false;
 }
 
+function executeOnly() {
+    return (typeof(argv.exec_only) !== 'undefined') ? true : false;
+}
+
 /**
  * Logs the current build mode on the console.
  */
@@ -204,6 +208,10 @@ function serve() {
     gulp.watch(STATIC_PATH + '/**/*', ['watch-static']).on('change', function() {
         keepFiles = true;
     });
+
+    if (executeOnly()) {
+        return process.exit(0);
+    }
 
 }
 

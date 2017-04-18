@@ -17,7 +17,17 @@ go get -u github.com/tools/godep
 godep restore
 
 
+# db create
+echo "CREATE DATABASE $PROJECT" | mysql -u root -p
+
+
 # Python3
 
 pip install -r $DJANGO_APP_DIR/requirements.txt
 python $DJANGO_APP_DIR/manage.py migrate
+
+
+# some noda
+cd $DJANGO_APP_DIR
+npm install
+npm run exec_only
