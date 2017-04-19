@@ -95,7 +95,6 @@ class MenuState extends Phaser.State {
     }
 
     createTankTab(parent, data) {
-        this.game.state.start('GameState', true, true, data);
         let callback = (e) => {
             e.preventDefault();
             this.game.state.start('GameState', true, true, data);

@@ -31,7 +31,7 @@ var DJANGO_PATH = './';
 // Static path
 var STATIC_URL = 'www/bbgdev1.ga';
 var STATIC_PATH = './static/bbg_client';
-var BUILD_PATH = './../' + STATIC_URL;
+var BUILD_PATH = '/srv/' + STATIC_URL;
 
 var SCRIPTS_PATH = BUILD_PATH + '/build';
 var CSS_PATH = SCRIPTS_PATH;
@@ -76,7 +76,7 @@ function logBuildMode() {
  */
 function cleanBuild() {
     if (!keepFiles) {
-        del([BUILD_PATH.substr(2) + '/build/**/*.*']);
+        del([BUILD_PATH + '/build/**/*.*']);
     } else {
         keepFiles = false;
     }

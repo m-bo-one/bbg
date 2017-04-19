@@ -10,3 +10,4 @@ bbg_server/protobufs/
 vendor/
 www/
 __pycache__/
+production.json

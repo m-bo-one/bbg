@@ -107,6 +107,9 @@ DATABASES = {
         'PASSWORD': 'root',
         'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
         'PORT': '',
+        'OPTIONS': {
+            'charset': 'utf8mb4'
+        }
     }
 }
 
@@ -226,6 +229,6 @@ GAME_CONFIG = {
 }
 
 try:
-    from settings_local import *
+    from .settings_local import *
 except ImportError:
     pass
