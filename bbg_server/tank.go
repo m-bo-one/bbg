@@ -60,19 +60,31 @@ func (t *Tank) GetDamage(b *Bullet) error {
 		if b.Tank != nil {
 			b.Tank.WSClient.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
 		}
+		go t.Restore(time.Second * 3)
 	}
-	t.Save()
+	if err := t.Save(); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (t *Tank) Restore(delay time.Duration) {
+	time.Sleep(delay)
+	t.Health = 100
+	t.Cmd.X = MapWidth / 2
+	t.Cmd.Y = MapHeight / 2
+
+	world.Add(t)
+
+	t.Save()
+
+	t.WSClient.sendProtoData(pb.BBGProtocol_TankUpdate, t.ToProtobuf(), true)
 }
 
 func (t *Tank) restoreBullet() bool {
 	log.Debugf("Bullets: %+v, bulletsToReload: %+v, Need recharge: %+v \n", t.Bullets, bulletsToReload, !t.needRecharge)
 	if t.isFullReloaded() {
-		t.Lock()
-		{
-			t.needRecharge = false
-		}
-		t.Unlock()
+		t.needRecharge = false
 		return true
 	}
 	atomic.AddInt32(&t.Bullets, 1)
@@ -84,11 +96,7 @@ func (t *Tank) reloader() {
 	ticker := time.NewTicker(TickRate * time.Millisecond)
 	defer func() {
 		ticker.Stop()
-		t.Lock()
-		{
-			t.reloaderStarted = false
-		}
-		t.Unlock()
+		t.reloaderStarted = false
 	}()
 	for {
 		select {
@@ -104,18 +112,13 @@ func (t *Tank) isFullReloaded() bool {
 	return t.Bullets == bulletsToReload
 }
 
-func (t *Tank) Shoot(axes *pb.MouseAxes) error {
+func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 	if t.IsDead() {
 		log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
 		return nil
 	}
 	if !t.reloaderStarted && !t.isFullReloaded() {
-		t.Lock()
-		{
-			t.reloaderStarted = true
-		}
-		t.Unlock()
-
+		t.reloaderStarted = true
 		go t.reloader()
 	}
 	if t.Bullets == 0 && !t.needRecharge {
@@ -125,13 +128,9 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		return nil
 	}
 
-	t.Lock()
-	{
-		t.LastShoot = time.Now().UTC().Unix()
-		t.Cmd.MouseAxes.X = *axes.X
-		t.Cmd.MouseAxes.Y = *axes.Y
-	}
-	t.Unlock()
+	t.LastShoot = time.Now().UTC().Unix()
+	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
+	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
 
 	atomic.AddInt32(&t.Bullets, -1)
 	bullet, err := NewBullet(t)
@@ -140,7 +139,10 @@ func (t *Tank) Shoot(axes *pb.MouseAxes) error {
 		return err
 	}
 	go bullet.Update(t.WSClient)
-	t.Save()
+
+	if err := t.Save(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -164,15 +166,15 @@ func (t *Tank) IsDead() bool {
 }
 
 // TurretRotate make tank turret rotating around its axis
-func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
+func (t *Tank) TurretRotate(pbMsg *pb.TankRotate) error {
 	if t.IsDead() {
 		log.Infof("Can't make a turret rotation. Tank #%s is dead.", t.ID)
 		return nil
 	}
+	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
+	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
 	t.Lock()
 	{
-		t.Cmd.MouseAxes.X = *axes.X
-		t.Cmd.MouseAxes.Y = *axes.Y
 		t.UpdateAngle()
 	}
 	t.Unlock()
@@ -180,30 +182,29 @@ func (t *Tank) TurretRotate(axes *pb.MouseAxes) error {
 	return nil
 }
 
-func (t *Tank) Move(direction *pb.Direction) error {
+func (t *Tank) Move(pbMsg *pb.TankMove) error {
 	if t.IsDead() {
 		log.Infof("Can't make a move. Tank #%s is dead.", t.ID)
 		return nil
 	}
 	world.Update(t, func() {
-		t.Lock()
-		{
-			t.Cmd.Direction = *direction
+		t.Cmd.Direction = pbMsg.GetDirection()
 
-			switch t.Cmd.Direction {
-			case pb.Direction_N:
-				t.Cmd.Y -= t.Speed
-			case pb.Direction_S:
-				t.Cmd.Y += t.Speed
-			case pb.Direction_E:
-				t.Cmd.X += t.Speed
-			case pb.Direction_W:
-				t.Cmd.X -= t.Speed
-			}
+		switch t.Cmd.Direction {
+		case pb.Direction_N:
+			atomic.AddInt32(&t.Cmd.Y, -t.Speed)
+		case pb.Direction_S:
+			atomic.AddInt32(&t.Cmd.Y, t.Speed)
+		case pb.Direction_E:
+			atomic.AddInt32(&t.Cmd.X, t.Speed)
+		case pb.Direction_W:
+			atomic.AddInt32(&t.Cmd.X, -t.Speed)
 		}
-		t.Unlock()
 	})
-	t.Save()
+
+	if err := t.Save(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -296,7 +297,7 @@ func (t *Tank) Update(pbMsg *pb.Tank) error {
 	if _, err := t.WSClient.hub.redis.HSet(tHash, t.ID, encoded).Result(); err != nil {
 		return err
 	}
-	log.Debugf("Updateing tank #%s to redis...", t.ID)
+	log.Debugf("Updating tank #%s to redis...", t.ID)
 	return nil
 }
 

@@ -72,6 +72,7 @@ func (h *Hub) tankMutator(key []byte, value []byte) error {
 
 	if found != nil {
 		found.Update(pbMsg)
+		found.WSClient.sendProtoData(pb.BBGProtocol_TankUpdate, found.ToProtobuf(), true)
 	}
 	return nil
 }
@@ -82,12 +83,6 @@ func (h *Hub) listenPushService(topic string, partition int32) error {
 		return err
 	}
 	defer partitionConsumer.Close()
-
-	h.Lock()
-	{
-		h.partitionConsumer[topic] = partitionConsumer
-	}
-	h.Unlock()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -108,6 +103,7 @@ SuckerLoop:
 			}
 			consumed++
 		case <-signals:
+			os.Exit(1)
 			break SuckerLoop
 		}
 	}

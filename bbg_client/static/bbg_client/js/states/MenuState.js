@@ -1,4 +1,4 @@
-import { makeRequest } from 'utils/helpers';
+import { makeRequest, pprint } from 'utils/helpers';
 
 class MenuState extends Phaser.State {
 
@@ -95,6 +95,7 @@ class MenuState extends Phaser.State {
     }
 
     createTankTab(parent, data) {
+        this.game.state.start('GameState', true, true, data);
         let callback = (e) => {
             e.preventDefault();
             this.game.state.start('GameState', true, true, data);
@@ -112,7 +113,7 @@ class MenuState extends Phaser.State {
                         <div class="dropdown-content">
                             <span><b>LVL: ${data.lvl}</b></span>
                             <span><b>Scores: ${data['scores-count']}</b></span>
-                            <span><b>KDA: ${data.kda.toFixed(2)}</b></span>
+                            <span><b>KDA: ${data.kda}</b></span>
                             <span><b>Kill count: ${data['kill-count']}</b></span>
                             <span><b>Death count: ${data['death-count']}</b></span>
                         </div>

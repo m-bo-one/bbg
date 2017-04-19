@@ -50,6 +50,10 @@ class Game extends Phaser.Game {
     imageLoad(key, fileName) {
         this.load.image(key, predefinedVars.staticURL + 'bbg_client/img/' + fileName);
     }
+
+    get currentState() {
+        return this.state.states[this.state.current];
+    }
 }
 
 window.game = new Game();

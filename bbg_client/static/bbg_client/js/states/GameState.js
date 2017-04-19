@@ -1,13 +1,12 @@
 import Tank from 'objects/Tank';
 import Bullet from 'objects/Bullet';
 import ProtoStream from 'utils/ws';
-import * as helpers from 'utils/helpers';
+import {pprint, isDeviceMobile, getKeyByValue, toFirstLowerCase} from 'utils/helpers';
 
 class GameState extends Phaser.State {
 
     init(data) {
-        this._token = predefinedVars.currentUser.token;
-        this._tkey = data.tkey;
+        this.initData = data;
     }
 
     preload() {
@@ -40,16 +39,44 @@ class GameState extends Phaser.State {
         this.game.time.advancedTiming = true; // enable FPS
         this.game.stream = new ProtoStream(`ws://${predefinedVars.wsURL}/game`, () => {
             this.game.stream.send("TankReg", {
-                token: this._token,
-                tKey: this._tkey
+                token: predefinedVars.currentUser.token,
+                tKey: this.initData.tkey
             });
-            let callbackType = helpers.isDeviceMobile() ? "pagehide" : "beforeunload";
+            let callbackType = isDeviceMobile() ? "pagehide" : "beforeunload";
             let callback = (e) => {
                 window.removeEventListener(callbackType, callback);
                 this.game.stream.send('TankUnreg');
             };
             window.addEventListener(callbackType, callback);
+
+            this.createStatBlock();
         });
+    }
+
+    createStatBlock() {
+        let initX = 30;
+        let initY = 20;
+        let offset = 30;
+        this._scoreText = this.game.add.text(initX, initY, `Scores: ${this.initData["scores-count"]}`);
+        this._killText = this.game.add.text(initX, initY + offset, `Kills: ${this.initData["kill-count"]}`);
+        this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${this.initData["death-count"]}`);
+    }
+
+    createRespawnBlock(counter=3) {
+        if (typeof this._restartText === "object") return;
+        this._restartText = this.game.add.text(0, 0, `Respawn at: ${counter}`);
+        this._restartText.x = this.game.width - 50 - this._restartText.width;
+        this._restartText.y = this.game.height - 75;
+        let id = setInterval(() => {
+            counter--;
+            if (counter === 0) {
+                clearInterval(id);
+                this._restartText.destroy();
+                delete this._restartText;
+                return
+            }
+            this._restartText.text = `Respawn at: ${counter}`;
+        }, 1000);
     }
 
     update() {
@@ -74,20 +101,23 @@ class GameState extends Phaser.State {
     }
 
     render() {
-        if (!this.game.currentTank) return;
-        this.game.debug.text(`FPS: ${this.game.time.fps}`, 2, 14, "#00ff00");
-        this.game.debug.text(`HP: ${this.game.currentTank.health}`, 2, 14 * 2, "#00ff00");
-        this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
+        if (predefinedVars.debug) {
+            if (!this.game.currentTank) return;
+        }
+        // if (!this.game.currentTank && !predefinedVars.debug) return;
+        // this.game.debug.text(`FPS: ${this.game.time.fps}`, 2, 14, "#00ff00");
+        // this.game.debug.text(`HP: ${this.game.currentTank.health}`, 2, 14 * 2, "#00ff00");
+        // this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
     }
 
     wsUpdate(data) {
         let stream = this.game.stream;
-        let kData = helpers.getKeyByValue(stream.pbProtocol.Type, data.type);
-        let pData = data[helpers.toFirstLowerCase(kData)];
+        let kData = getKeyByValue(stream.pbProtocol.Type, data.type);
+        let pData = data[toFirstLowerCase(kData)];
 
         if (typeof pData === 'undefined') return;
 
-        console.log('Received message: ', pData)
+        pprint('Received message: ', pData)
 
         switch(data.type) {
             case stream.pbProtocol.Type.MapUpdate:
@@ -111,7 +141,7 @@ class GameState extends Phaser.State {
                 Bullet.wsUpdate(game, pData);
                 break;
             case stream.pbProtocol.Type.UnhandledType:
-                console.log('Unhandled type receive. Data: ', data);
+                pprint('Unhandled type receive. Data: ', data);
                 break;
         }
     }

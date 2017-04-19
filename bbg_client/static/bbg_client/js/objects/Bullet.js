@@ -26,10 +26,10 @@ class Bullet extends BaseElement {
             let tank = game.tanks[data.tankId];
             let bullet;
             if (tank.bullets.hasOwnProperty(data.id)) {
-                console.log(`Update bullet position...`);
+                // console.log(`Update bullet position...`);
                 tank.bullets[data.id].update(data);
             } else {
-                console.log(`Creating new bullet...`);
+                // console.log(`Creating new bullet...`);
                 new Bullet(game, data, 'bullet', tank);
             }
         }

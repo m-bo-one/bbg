@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
@@ -28,6 +29,8 @@ type Client struct {
 
 	// Client tank model
 	tank *Tank
+
+	sync.Mutex
 }
 
 func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all bool) error {
@@ -119,7 +122,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if c.tank == nil {
 			return errors.New("TankMove: Tank does not exist")
 		}
-		if err := c.tank.Move(message.TankMove.Direction); err != nil {
+		if err := c.tank.Move(message.TankMove); err != nil {
 			return err
 		}
 
@@ -127,7 +130,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if c.tank == nil {
 			return errors.New("TankRotate: Tank does not exist")
 		}
-		if err := c.tank.TurretRotate(message.TankRotate.MouseAxes); err != nil {
+		if err := c.tank.TurretRotate(message.TankRotate); err != nil {
 			return err
 		}
 
@@ -135,7 +138,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		if c.tank == nil {
 			return errors.New("TankShoot: Tank does not exist")
 		}
-		if err := c.tank.Shoot(message.TankShoot.MouseAxes); err != nil {
+		if err := c.tank.Shoot(message.TankShoot); err != nil {
 			return fmt.Errorf("TankShoot: Got error while shooting: %s", err)
 		}
 
@@ -159,6 +162,7 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
+
 	for {
 		log.Debugln("readPump GOGOGO")
 		_, message, err := c.conn.ReadMessage()
@@ -172,13 +176,17 @@ func (c *Client) readPump() {
 		pbMsg := &pb.BBGProtocol{}
 		if err := proto.Unmarshal(message, pbMsg); err != nil {
 			log.Errorln("Unmarshaling error: ", err)
-			continue
+			break
 		}
 
 		log.Debugln("readPump - reading...")
+		c.Lock()
 		if err := c.manageEvent(pbMsg); err != nil {
-			panic(err)
+			c.Unlock()
+			log.Errorln("Proto event error: ", err)
+			break
 		}
+		c.Unlock()
 	}
 }
 
@@ -187,34 +195,40 @@ func (c *Client) writePump() {
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
+
 	for {
 		select {
 		case message, ok := <-c.send:
 			log.Debugln("STARTER writePump")
 			if !ok {
-				// The hub closed the channel.
 				msg := "Hub closed."
 				c.conn.WriteMessage(websocket.CloseMessage, []byte(msg))
-				log.Errorln("Hub closed.")
+				log.Errorln(msg)
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.BinaryMessage)
 			if err != nil {
-				log.Errorln(err)
+				log.Errorln("Writer error: ", err)
 				return
 			}
-
+			c.Lock()
 			encoded, err := proto.Marshal(message)
 			if err != nil {
-				log.Errorln(err)
+				c.Unlock()
+				log.Errorln("Marshaling error: ", err)
+				return
+			}
+			c.Unlock()
+
+			log.Debugln("writePump - writing...")
+			if _, err := w.Write(encoded); err != nil {
+				log.Errorln("Write error: ", err)
 				return
 			}
 
-			log.Debugln("writePump - writing...")
-			w.Write(encoded)
-
 			if err := w.Close(); err != nil {
+				log.Errorln("Write close error: ", err)
 				return
 			}
 		}

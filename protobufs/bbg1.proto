@@ -12,7 +12,6 @@ enum Direction {
 enum StatStatus {
     Death = 1;
     Kill = 2;
-    Resurect = 3;
 }
 
 message MouseAxes {

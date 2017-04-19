@@ -22,6 +22,7 @@ var PHASER_PATH = './node_modules/phaser/build';
 var BOOTSTRAP_PATH = './node_modules/bootstrap/dist';
 var BOOTSTRAP_SOCIAL_PATH = './node_modules/bootstrap-social';
 var FONT_AWESOME_PATH = './node_modules/font-awesome';
+var PHASER_PLUGIN_SCENE_GRAPH = './node_modules/phaser-plugin-scene-graph/dist';
 
 // App pathes
 var SERVER_PATH = './../bbg_server';
@@ -113,6 +114,7 @@ function copyJS() {
     var srcList = [
         PHASER_PATH + '/phaser.min.js',
         BOOTSTRAP_PATH + '/js/bootstrap.min.js',
+        PHASER_PLUGIN_SCENE_GRAPH + '/SceneGraph.js',
     ];
         
     return gulp.src(srcList)

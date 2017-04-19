@@ -54,3 +54,9 @@ export const makeRequest = (rData) => {
         return resp.json();
     });
 }
+
+export const pprint = (...args) => {
+    if (predefinedVars.debug) {
+        console.log(...args);
+    }
+}
