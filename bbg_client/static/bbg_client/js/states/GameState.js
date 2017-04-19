@@ -14,6 +14,15 @@ class GameState extends Phaser.State {
         this.game.imageLoad('gun-turret', 'sprites/GunTurret.png');
         this.game.imageLoad('bullet', 'sprites/Bullet.png');
         this.game.imageLoad('lazer', 'sprites/Lazer.png');
+
+        if (isDeviceMobile()) {
+            this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+            this.game.scale.setShowAll();
+            window.addEventListener('resize', function () {
+                this.game.scale.refresh();
+            });
+            this.game.scale.refresh();
+        }
     }
 
     create() {
