@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/DeV1doR/bbg/server",
+	"ImportPath": "github.com/DeV1doR/bbg/bbg_server",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Deps": [
@@ -7,6 +7,25 @@
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.11.5-12-g10f801e",
 			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
+		},
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Comment": "v1.1.0",
+			"Rev": "346938d642f2ec3594ed81d874461961cd0faa76"
+		},
+		{
+			"ImportPath": "github.com/eapache/go-resiliency/breaker",
+			"Comment": "v1.0.0-4-gb86b1ec",
+			"Rev": "b86b1ec0dd4209a588dc1285cdd471e73525c0b3"
+		},
+		{
+			"ImportPath": "github.com/eapache/go-xerial-snappy",
+			"Rev": "bb955e01b9346ac19dc29eb16586c90ded99a98c"
+		},
+		{
+			"ImportPath": "github.com/eapache/queue",
+			"Comment": "v1.0.2-7-g44cc805",
+			"Rev": "44cc805cf13205b55f69e14bcb69867d1ae92f98"
 		},
 		{
 			"ImportPath": "github.com/go-redis/redis",
@@ -39,28 +58,17 @@
 			"Rev": "18dcec21440a5c6e96da08fcdce732bb9436c190"
 		},
 		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.3-6-g9dee4ca",
+			"Rev": "9dee4ca50b83acdf57a35fb9e6fb4be640afa2f3"
+		},
+		{
 			"ImportPath": "github.com/golang/protobuf/proto",
 			"Rev": "c9c7427a2a70d2eb3bafa0ab2dc163e45f143317"
 		},
 		{
-			"ImportPath": "github.com/gorilla/context",
-			"Comment": "v1.1-7-g08b5f42",
-			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
-		},
-		{
-			"ImportPath": "github.com/gorilla/mux",
-			"Comment": "v1.3.0-5-g599cba5",
-			"Rev": "599cba5e7b6137d46ddf58fb1765f5d928e69604"
-		},
-		{
-			"ImportPath": "github.com/gorilla/securecookie",
-			"Comment": "v1.1-6-ge59506c",
-			"Rev": "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983"
-		},
-		{
-			"ImportPath": "github.com/gorilla/sessions",
-			"Comment": "v1.1-5-gba78acc",
-			"Rev": "ba78acc856fe7c79891d516131b3d903cc8d9367"
+			"ImportPath": "github.com/golang/snappy",
+			"Rev": "553a641470496b2327abcac10b36396bd98e45c9"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
@@ -68,28 +76,31 @@
 			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
 		},
 		{
-			"ImportPath": "golang.org/x/net/context",
-			"Rev": "d1e1b351919c6738fdeb9893d5c998b161464f0c"
+			"ImportPath": "github.com/klauspost/crc32",
+			"Comment": "v1.1-2-g1bab8b3",
+			"Rev": "1bab8b35b6bb565f92cbc97939610af9369f942a"
 		},
 		{
-			"ImportPath": "golang.org/x/oauth2",
-			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+			"ImportPath": "github.com/pierrec/lz4",
+			"Rev": "f5b77fd73d83122495309c0f459b810f83cc291f"
 		},
 		{
-			"ImportPath": "golang.org/x/oauth2/facebook",
-			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+			"ImportPath": "github.com/pierrec/xxHash/xxHash32",
+			"Comment": "v0.1-4-g5a00444",
+			"Rev": "5a004441f897722c627870a981d02b29924215fa"
 		},
 		{
-			"ImportPath": "golang.org/x/oauth2/github",
-			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
-		},
-		{
-			"ImportPath": "golang.org/x/oauth2/internal",
-			"Rev": "7fdf09982454086d5570c7db3e11f360194830ca"
+			"ImportPath": "github.com/rcrowley/go-metrics",
+			"Rev": "1f30fe9094a513ce4c700b9a54458bbb0c96996c"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "493114f68206f85e7e333beccfabc11e98cba8dd"
+		},
+		{
+			"ImportPath": "gopkg.in/Shopify/sarama.v1",
+			"Comment": "v1.11.0",
+			"Rev": "0fb560e5f7fbcaee2f75e3c34174320709f69944"
 		}
 	]
 }
