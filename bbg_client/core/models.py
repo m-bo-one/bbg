@@ -295,7 +295,7 @@ class Score(models.Model):
 
     def __str__(self):
         return "TID: {tid}; Value: {value}" \
-            .format(tid=self.tank.id, event=self.value)
+            .format(tid=self.tank.id, value=self.value)
 
 
 class Tank(RTankProxy, models.Model):

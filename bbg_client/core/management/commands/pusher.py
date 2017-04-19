@@ -11,7 +11,9 @@ from aiokafka import AIOKafkaConsumer
 from core.models import Tank, Stat
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format='[%(asctime)s %(levelname)s '
+                           '%(name)s:%(filename)s:%(lineno)s] %(message)s')
 
 
 class Command(BaseCommand):
