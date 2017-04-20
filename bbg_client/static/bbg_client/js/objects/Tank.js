@@ -1,5 +1,6 @@
 import BaseElement from 'objects/BaseElement';
 import HealthBar from 'objects/HealthBar';
+import {pprint} from 'utils/helpers';
 
 class Tank extends BaseElement {
 
@@ -38,7 +39,7 @@ class Tank extends BaseElement {
 
     static wsCreate(game, data) {
         if (!game.tanks.hasOwnProperty(data.tankId)) {
-            // console.log('Creating new tank...');
+            pprint('Creating new tank...');
             game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
             game.currentTank = game.tanks[data.tankId];
 
@@ -64,9 +65,9 @@ class Tank extends BaseElement {
     }
 
     static wsUpdate(game, data) {
-        // console.log('Receive tank update. Applying...');
+        pprint('Receive tank update. Applying...');
         if (!game.tanks.hasOwnProperty(data.tankId)) {
-            // console.log('Creating new tank...');
+            pprint('Creating new tank...');
             game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
         } else {
             game.tanks[data.tankId].update(data);
@@ -75,7 +76,7 @@ class Tank extends BaseElement {
 
     static wsRemove(game, data) {
         if (game.tanks.hasOwnProperty(data.tankId)) {
-            // console.log(`Removing tank ID:${data.tankId}...`);
+            pprint(`Removing tank ID:${data.tankId}...`);
 
             if (game.currentTank && game.currentTank.id == data.tankId) {
                 // game.currentTank.destroy();
