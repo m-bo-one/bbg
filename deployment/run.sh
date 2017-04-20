@@ -1,6 +1,9 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $DIR/vars.sh
+source $DIR/start_kafka.sh
+
+sleep 2
 
 tmux new-session -d -s $PROJECT
 tmux attach-session $PROJECT
