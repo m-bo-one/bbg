@@ -108,8 +108,18 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		}
 		tKey, err := c.validateTKey(message.TankReg.GetToken(), message.TankReg.GetTKey())
 		if err != nil {
-			return fmt.Errorf("TankReg: Invalid tKey: %s", err)
+			return fmt.Errorf("TankReg: Invalid tKey: %s. Detailed: %s", tKey, err)
 		}
+		c.hub.Lock()
+		{
+			for client, ok := range c.hub.clients {
+				if ok && client.tank != nil && client.tank.ID == tKey {
+					c.hub.Unlock()
+					return fmt.Errorf("TankReg: Tank %s already in game", tKey)
+				}
+			}
+		}
+		c.hub.Unlock()
 		tank, err := LoadTank(c, c.hub.redis, tKey)
 		if err != nil {
 			return fmt.Errorf("TankReg: Load tank error: %s", err)

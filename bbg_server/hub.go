@@ -122,23 +122,31 @@ func (h *Hub) run() {
 				h.clients[client] = true
 			}
 			h.Unlock()
-			log.Debugln("Hub: Client subscribed")
+			log.Infoln("Hub: Client subscribed")
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.send)
-				log.Debugln("Hub: Client unsubscribed")
-			}
-		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
+			h.RLock()
+			{
+				if _, ok := h.clients[client]; ok {
 					delete(h.clients, client)
-					log.Debugln("Hub: Client closed conn")
+					close(client.send)
+					log.Infoln("Hub: Client unsubscribed")
 				}
 			}
+			h.RUnlock()
+		case message := <-h.broadcast:
+			h.RLock()
+			{
+				for client := range h.clients {
+					select {
+					case client.send <- message:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+						log.Infoln("Hub: Client closed conn")
+					}
+				}
+			}
+			h.RUnlock()
 		}
 	}
 }

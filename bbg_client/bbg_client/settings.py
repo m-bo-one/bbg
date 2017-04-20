@@ -191,7 +191,7 @@ BBG_WS_URL = '127.0.0.1:8888'
 GULP_PRODUCTION_COMMAND = ''
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'www', 'bbgdev1.ga')
+STATIC_ROOT = '/srv/www/bbgdev1.ga'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 

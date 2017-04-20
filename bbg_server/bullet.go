@@ -59,6 +59,7 @@ func (b *Bullet) IsColide() (*Tank, bool) {
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
 			if tank != b.Tank {
+				log.Println(tank.WSClient.hub.clients)
 				log.Errorf("Collided with: %+v \n", tank)
 				log.Errorf("%p == %p \n", tank, b.Tank)
 				return tank, true
