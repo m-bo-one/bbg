@@ -14,7 +14,7 @@ import (
 
 const (
 	tHash           string = "bbg:tanks"
-	bulletsToReload        = 3
+	bulletsToReload        = 1
 )
 
 type TGun struct {
