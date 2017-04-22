@@ -1,4 +1,5 @@
 import * as protobuf from "../../../../node_modules/protobufjs/index.js";
+import { pprint, toFirstLowerCase } from 'utils/helpers';
 
 class ProtoStream {
 
@@ -12,7 +13,7 @@ class ProtoStream {
         this._ws.binaryType = "arraybuffer";
 
         this._ws.onopen = () => {
-            console.log('open');
+            pprint('open');
         };
 
         this._ws.onmessage = (e) => {
@@ -24,11 +25,11 @@ class ProtoStream {
             }
         };
         this._ws.onclose = (e) => {
-            console.log('ws closed', e);
+            pprint('ws closed', e);
             this.retry(url, callback, ...args);
         };
         this._ws.onerror = (e) => {
-            console.log('ws error', e);
+            pprint('ws error', e);
         };
         this.loadProtos({
             'bbg1': {
@@ -52,10 +53,10 @@ class ProtoStream {
         try {
             setTimeout(() => {
                 game.stream = new ProtoStream(url, callback, ...args);
-                console.log('successfully restarted.');
+                pprint('successfully restarted.');
             }, 2000);
         } catch (e) {
-            console.log('failed, trying again...');
+            pprint('failed, trying again...');
         }
     }
 
@@ -79,14 +80,14 @@ class ProtoStream {
             return;
         }
         let prData = {
-            type: this.pbProtocol.Type[type] || this.pbProtocol.Type.UnhandledType,
+            type: this.pbProtocol.Type[`T${type}`] || this.pbProtocol.Type.UnhandledType,
             version: 1
         }
         if(data) {
-            type = ((string) => string.charAt(0).toLowerCase() + string.slice(1))(type);
+            type = toFirstLowerCase(type);
             prData[type] = data;
         }
-        // console.log("Obj2pb: ", prData);
+        console.log("Obj2pb: ", prData);
         let msg = this.pbProtocol.fromObject(prData);
         let encoded = this.pbProtocol.encode(msg).finish();
         this._ws.send(encoded);
@@ -95,8 +96,8 @@ class ProtoStream {
     onmessage(bytearray) {
         let decoded = this.pbProtocol.decode(bytearray);
         if (Object.keys(decoded).length != 0) {
-            // console.log('decoded: ', decoded);
-            game.state.states[game.state.current].wsUpdate(decoded);
+            pprint('decoded: ', decoded);
+            game.currentState.wsUpdate(decoded);
         }
     }
 
@@ -107,7 +108,7 @@ class ProtoStream {
             protobuf.load(`static/protobufs/${pkey}.proto`, (err, root) => {
                 _length--;
                 if (err) {
-                    console.log("Error during protobuf loading. ", err);
+                    pprint("Error during protobuf loading. ", err);
                     return;
                 }
                 let tdata = pdata[pkey];
@@ -134,7 +135,7 @@ class ProtoStream {
                                     return;
                             }
                         } catch(e) {
-                            console.log(`Error during setup. Detailed: ${e} - ${protoName}.`);
+                            pprint(`Error during setup. Detailed: ${e} - ${protoName}.`);
                         }
                     });
                 });
@@ -152,6 +153,7 @@ class ProtoStream {
             }, 1000);
             return;
         }
+        pprint('Stream load completed.')
         if (this._callback !== null) this._callback();
     }
 

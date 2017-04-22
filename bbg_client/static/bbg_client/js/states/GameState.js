@@ -144,14 +144,14 @@ class GameState extends Phaser.State {
     wsUpdate(data) {
         let stream = this.game.stream;
         let kData = getKeyByValue(stream.pbProtocol.Type, data.type);
-        let pData = data[toFirstLowerCase(kData)];
+        let pData = data[toFirstLowerCase(kData.slice(1))];
 
         if (typeof pData === 'undefined') return;
 
         pprint('Received message: ', pData)
 
         switch(data.type) {
-            case stream.pbProtocol.Type.MapUpdate:
+            case stream.pbProtocol.Type.TMapUpdate:
                 switch(true) {
                     case Array.isArray(pData.tanks):
                         pData.tanks.forEach(dData => Tank.wsUpdate(game, dData));
@@ -159,19 +159,19 @@ class GameState extends Phaser.State {
                         pData.bullets.forEach(dData => Bullet.wsUpdate(game, dData));
                 }
                 break;
-            case stream.pbProtocol.Type.TankNew:
+            case stream.pbProtocol.Type.TTankNew:
                 Tank.wsCreate(game, pData);
                 break;
-            case stream.pbProtocol.Type.TankUpdate:
+            case stream.pbProtocol.Type.TTankUpdate:
                 Tank.wsUpdate(game, pData);
                 break;
-            case stream.pbProtocol.Type.TankRemove:
+            case stream.pbProtocol.Type.TTankRemove:
                 Tank.wsRemove(game, pData);
                 break;
-            case stream.pbProtocol.Type.BulletUpdate:
+            case stream.pbProtocol.Type.TBulletUpdate:
                 Bullet.wsUpdate(game, pData);
                 break;
-            case stream.pbProtocol.Type.UnhandledType:
+            case stream.pbProtocol.Type.TUnhandledType:
                 pprint('Unhandled type receive. Data: ', data);
                 break;
         }

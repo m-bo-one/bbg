@@ -72,7 +72,7 @@ func (h *Hub) tankMutator(key []byte, value []byte) error {
 
 	if found != nil {
 		found.Update(pbMsg)
-		found.WSClient.sendProtoData(pb.BBGProtocol_TankUpdate, found.ToProtobuf(), true)
+		found.WSClient.sendProtoData(pb.BBGProtocol_TTankUpdate, found.ToProtobuf(), true)
 	}
 	return nil
 }
@@ -117,36 +117,25 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.Lock()
-			{
-				h.clients[client] = true
-			}
-			h.Unlock()
+			h.clients[client] = true
 			log.Infoln("Hub: Client subscribed")
+			log.Infof("Hub: Total clients: %+v\n", h.clients)
 		case client := <-h.unregister:
-			h.RLock()
-			{
-				if _, ok := h.clients[client]; ok {
-					delete(h.clients, client)
-					close(client.send)
-					log.Infoln("Hub: Client unsubscribed")
-				}
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+				log.Infoln("Hub: Client unsubscribed")
 			}
-			h.RUnlock()
 		case message := <-h.broadcast:
-			h.RLock()
-			{
-				for client := range h.clients {
-					select {
-					case client.send <- message:
-					default:
-						close(client.send)
-						delete(h.clients, client)
-						log.Infoln("Hub: Client closed conn")
-					}
+			for client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(h.clients, client)
+					log.Infoln("Hub: Client closed conn")
 				}
 			}
-			h.RUnlock()
 		}
 	}
 }

@@ -36,12 +36,13 @@ type Client struct {
 func (c *Client) sendProtoData(wsType pb.BBGProtocol_Type, data interface{}, all bool) error {
 	pbMsg := new(pb.BBGProtocol)
 	dict2proto := map[string]interface{}{
-		"Type":    &wsType,
-		"Version": &appConf.ProtocolVersion,
+		"Type":    wsType,
+		"Version": appConf.ProtocolVersion,
 	}
 
 	if data != nil {
-		dict2proto[pb.BBGProtocol_Type_name[int32(wsType)]] = data
+		bMsg := pb.BBGProtocol_Type_name[int32(wsType)]
+		dict2proto[bMsg[1:]] = data
 	}
 
 	if err := FillStruct(dict2proto, pbMsg); err != nil {
@@ -89,8 +90,8 @@ func (c *Client) validateTKey(token string, tKey string) (string, error) {
 }
 
 func (c *Client) manageEvent(message *pb.BBGProtocol) error {
-	switch pType := message.Type; *pType {
-	case pb.BBGProtocol_TankUnreg:
+	switch message.Type {
+	case pb.BBGProtocol_TTankUnreg:
 		if c.tank == nil {
 			return errors.New("TankUnreg: Tank does not exist")
 		}
@@ -99,68 +100,63 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 			return fmt.Errorf("TankUnreg: Remove tank error: %s", err)
 		}
 		c.tank = nil
-		var testID uint32
-		c.sendProtoData(pb.BBGProtocol_TankRemove, &pb.TankRemove{Id: &testID, TankId: &pk}, true)
+		c.sendProtoData(pb.BBGProtocol_TTankRemove, &pb.TankRemove{Id: 0, TankId: pk}, true)
 
-	case pb.BBGProtocol_TankReg:
+	case pb.BBGProtocol_TTankReg:
 		if c.tank != nil {
 			return errors.New("TankReg: Tank already registred for this client")
 		}
-		tKey, err := c.validateTKey(message.TankReg.GetToken(), message.TankReg.GetTKey())
+		msg := message.GetTankReg()
+		tKey, err := c.validateTKey(msg.GetToken(), msg.GetTKey())
 		if err != nil {
 			return fmt.Errorf("TankReg: Invalid tKey: %s. Detailed: %s", tKey, err)
 		}
-		c.hub.Lock()
-		{
-			for client, ok := range c.hub.clients {
-				if ok && client.tank != nil && client.tank.ID == tKey {
-					c.hub.Unlock()
-					return fmt.Errorf("TankReg: Tank %s already in game", tKey)
-				}
+		for client, ok := range c.hub.clients {
+			if ok && client.tank != nil && client.tank.ID == tKey {
+				return fmt.Errorf("TankReg: Tank %s already in game", tKey)
 			}
 		}
-		c.hub.Unlock()
 		tank, err := LoadTank(c, c.hub.redis, tKey)
 		if err != nil {
 			return fmt.Errorf("TankReg: Load tank error: %s", err)
 		}
 		c.tank = tank
-		c.sendProtoData(pb.BBGProtocol_TankNew, c.tank.ToProtobuf(), false)
-		c.sendProtoData(pb.BBGProtocol_MapUpdate, c.mapToProtobuf(), false)
+		c.sendProtoData(pb.BBGProtocol_TTankNew, c.tank.ToProtobuf(), false)
+		c.sendProtoData(pb.BBGProtocol_TMapUpdate, c.mapToProtobuf(), false)
 
-	case pb.BBGProtocol_TankMove:
+	case pb.BBGProtocol_TTankMove:
 		if c.tank == nil {
 			return errors.New("TankMove: Tank does not exist")
 		}
-		if err := c.tank.Move(message.TankMove); err != nil {
+		if err := c.tank.Move(message.GetTankMove()); err != nil {
 			return err
 		}
 
-	case pb.BBGProtocol_TankRotate:
+	case pb.BBGProtocol_TTankRotate:
 		if c.tank == nil {
 			return errors.New("TankRotate: Tank does not exist")
 		}
-		if err := c.tank.TurretRotate(message.TankRotate); err != nil {
+		if err := c.tank.TurretRotate(message.GetTankRotate()); err != nil {
 			return err
 		}
 
-	case pb.BBGProtocol_TankShoot:
+	case pb.BBGProtocol_TTankShoot:
 		if c.tank == nil {
 			return errors.New("TankShoot: Tank does not exist")
 		}
-		if err := c.tank.Shoot(message.TankShoot); err != nil {
+		if err := c.tank.Shoot(message.GetTankShoot()); err != nil {
 			return fmt.Errorf("TankShoot: Got error while shooting: %s", err)
 		}
 
 	default:
-		c.sendProtoData(pb.BBGProtocol_UnhandledType, nil, false)
+		c.sendProtoData(pb.BBGProtocol_TUnhandledType, nil, false)
 		return nil
 	}
 
 	log.Debugf("BBG: Incomming message: %+v \n", message)
 
 	if c.tank != nil {
-		c.sendProtoData(pb.BBGProtocol_TankUpdate, c.tank.ToProtobuf(), true)
+		c.sendProtoData(pb.BBGProtocol_TTankUpdate, c.tank.ToProtobuf(), true)
 	}
 
 	return nil
@@ -180,31 +176,25 @@ func (c *Client) readPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Errorf("error: %v", err)
 			}
-			break
+			return
 		}
 
 		pbMsg := &pb.BBGProtocol{}
 		if err := proto.Unmarshal(message, pbMsg); err != nil {
 			log.Errorln("Unmarshaling error: ", err)
-			break
+			return
 		}
 
 		log.Debugln("readPump - reading...")
-		c.Lock()
 		if err := c.manageEvent(pbMsg); err != nil {
-			c.Unlock()
 			log.Errorln("Proto event error: ", err)
-			break
+			return
 		}
-		c.Unlock()
 	}
 }
 
 func (c *Client) writePump() {
-	defer func() {
-		c.hub.unregister <- c
-		c.conn.Close()
-	}()
+	defer c.conn.Close()
 
 	for {
 		select {
@@ -222,14 +212,12 @@ func (c *Client) writePump() {
 				log.Errorln("Writer error: ", err)
 				return
 			}
-			c.Lock()
+
 			encoded, err := proto.Marshal(message)
 			if err != nil {
-				c.Unlock()
 				log.Errorln("Marshaling error: ", err)
 				return
 			}
-			c.Unlock()
 
 			log.Debugln("writePump - writing...")
 			if _, err := w.Write(encoded); err != nil {

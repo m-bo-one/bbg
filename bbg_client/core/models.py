@@ -78,14 +78,6 @@ class RTankProxy(object):
         self._rupdate(speed=value)
 
     @property
-    def fire_rate(self):
-        return self._rget().fireRate
-
-    @fire_rate.setter
-    def fire_rate(self, value):
-        self._rupdate(fireRate=value)
-
-    @property
     def width(self):
         return self._rget().width
 
@@ -221,7 +213,18 @@ class RTankProxy(object):
             id=self.tkey,
             x=int(settings.GAME_CONFIG['MAP']['width'] / 2),
             y=int(settings.GAME_CONFIG['MAP']['height'] / 2),
-            name=self.name
+            name=self.name,
+            health=100,
+            speed=5,
+            direction=0,
+            width=10,
+            height=10,
+            angle=0,
+            gun=bbg1_pb2.TankGun(
+                bullets=3,
+                damage=10,
+                distance=750.0
+            )
         )
         self.redis.hset(self.thash, self.tkey, tank.SerializeToString())
         return tank

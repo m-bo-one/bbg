@@ -38,17 +38,15 @@ func (b *Bullet) GetRadius() int32 {
 }
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
-	b.Lock()
-	defer b.Unlock()
 	return &pb.BulletUpdate{
-		Id:       &b.ID,
-		TankId:   &b.Tank.ID,
-		X:        &b.X,
-		Y:        &b.Y,
-		Angle:    &b.Angle,
-		Speed:    &b.Speed,
-		Alive:    &b.Alive,
-		Distance: &b.Distance,
+		Id:       b.ID,
+		TankId:   b.Tank.ID,
+		X:        b.X,
+		Y:        b.Y,
+		Angle:    b.Angle,
+		Speed:    b.Speed,
+		Alive:    b.Alive,
+		Distance: b.Distance,
 	}
 }
 
@@ -78,7 +76,7 @@ func (b *Bullet) Update(c *Client) {
 	ticker := time.NewTicker(time.Second / TickRate)
 
 	defer func() {
-		c.sendProtoData(pb.BBGProtocol_BulletUpdate, b.ToProtobuf(), true)
+		c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
 		ticker.Stop()
 		world.Remove(b)
 	}()
@@ -97,12 +95,12 @@ func (b *Bullet) Update(c *Client) {
 			if tank, isCollide := b.IsColide(); isCollide || b.IsOutOfRange() {
 				if tank != nil {
 					tank.GetDamage(b)
-					c.sendProtoData(pb.BBGProtocol_TankUpdate, tank.ToProtobuf(), true)
+					c.sendProtoData(pb.BBGProtocol_TTankUpdate, tank.ToProtobuf(), true)
 				}
 				b.Alive = false
 				return
 			}
-			c.sendProtoData(pb.BBGProtocol_BulletUpdate, b.ToProtobuf(), true)
+			c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
 		}
 	}
 }

@@ -33,7 +33,7 @@ class TankAdmin(admin.ModelAdmin):
                     'created_at')
 
     readonly_fields = ('tkey', 'lvl', 'created_at', 'kda',
-                       'x', 'y', 'colored_health', 'fire_rate', 'speed',
+                       'x', 'y', 'colored_health', 'speed',
                        'direction', 'width', 'height', 'angle', 'scores_count',
                        'gun_damage', 'gun_bullets', 'gun_distance', 'nickname',
                        'kill_count', 'death_count')
@@ -49,7 +49,7 @@ class TankAdmin(admin.ModelAdmin):
             'classes': ('extrapretty',),
             'fields': ('nickname',
                        'x', 'y',
-                       'colored_health', 'fire_rate', 'speed', 'direction',
+                       'colored_health', 'speed', 'direction',
                        'width', 'height',
                        'angle',
                        'gun_damage', 'gun_bullets', 'gun_distance')

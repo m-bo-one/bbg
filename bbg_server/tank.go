@@ -29,7 +29,6 @@ type Tank struct {
 	ID            string
 	Name          string
 	Health        int32
-	FireRate      int32
 	Speed         int32
 	Width, Height int32
 	LastShoot     int64
@@ -85,7 +84,7 @@ func (t *Tank) Restore(delay time.Duration) {
 
 	t.Save()
 
-	t.WSClient.sendProtoData(pb.BBGProtocol_TankUpdate, t.ToProtobuf(), true)
+	t.WSClient.sendProtoData(pb.BBGProtocol_TTankUpdate, t.ToProtobuf(), true)
 }
 
 func (t *Tank) restoreBullet() bool {
@@ -120,36 +119,36 @@ func (t *Tank) isFullReloaded() bool {
 }
 
 func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
-	if t.IsDead() {
-		log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
-		return nil
-	}
-	if !t.reloaderStarted && !t.isFullReloaded() {
-		t.reloaderStarted = true
-		go t.reloader()
-	}
-	if t.Bullets == 0 && !t.needRecharge {
-		t.needRecharge = true
-		return nil
-	} else if t.needRecharge || t.Bullets < 0 {
-		return nil
-	}
+	// if t.IsDead() {
+	// 	log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
+	// 	return nil
+	// }
+	// if !t.reloaderStarted && !t.isFullReloaded() {
+	// 	t.reloaderStarted = true
+	// 	go t.reloader()
+	// }
+	// if t.Bullets == 0 && !t.needRecharge {
+	// 	t.needRecharge = true
+	// 	return nil
+	// } else if t.needRecharge || t.Bullets < 0 {
+	// 	return nil
+	// }
 
-	t.LastShoot = time.Now().UTC().Unix()
-	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
-	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	// t.LastShoot = time.Now().UTC().Unix()
+	// t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
+	// t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
 
-	atomic.AddInt32(&t.Bullets, -1)
-	bullet, err := NewBullet(t)
-	if err != nil {
-		atomic.AddInt32(&t.Bullets, 1)
-		return err
-	}
-	go bullet.Update(t.WSClient)
+	// atomic.AddInt32(&t.Bullets, -1)
+	// bullet, err := NewBullet(t)
+	// if err != nil {
+	// 	atomic.AddInt32(&t.Bullets, 1)
+	// 	return err
+	// }
+	// go bullet.Update(t.WSClient)
 
-	if err := t.Save(); err != nil {
-		return err
-	}
+	// if err := t.Save(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -174,64 +173,61 @@ func (t *Tank) IsDead() bool {
 
 // TurretRotate make tank turret rotating around its axis
 func (t *Tank) TurretRotate(pbMsg *pb.TankRotate) error {
-	if t.IsDead() {
-		log.Infof("Can't make a turret rotation. Tank #%s is dead.", t.ID)
-		return nil
-	}
-	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
-	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
-	t.Lock()
-	{
-		t.UpdateAngle()
-	}
-	t.Unlock()
-	t.Save()
+	// if t.IsDead() {
+	// 	log.Infof("Can't make a turret rotation. Tank #%s is dead.", t.ID)
+	// 	return nil
+	// }
+	// t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
+	// t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	// t.Lock()
+	// {
+	// t.UpdateAngle()
+	// }
+	// t.Unlock()
+	// t.Save()
 	return nil
 }
 
 func (t *Tank) Move(pbMsg *pb.TankMove) error {
-	if t.IsDead() {
-		log.Infof("Can't make a move. Tank #%s is dead.", t.ID)
-		return nil
+	// if t.IsDead() {
+	// 	log.Infof("Can't make a move. Tank #%s is dead.", t.ID)
+	// 	return nil
+	// }
+	// world.Update(t, func() {
+	t.Cmd.Direction = pbMsg.GetDirection()
+
+	switch t.Cmd.Direction {
+	case pb.Direction_N:
+		t.Cmd.Y -= t.Speed
+	case pb.Direction_S:
+		t.Cmd.Y += t.Speed
+	case pb.Direction_E:
+		t.Cmd.X += t.Speed
+	case pb.Direction_W:
+		t.Cmd.X -= t.Speed
 	}
-	world.Update(t, func() {
-		t.Cmd.Direction = pbMsg.GetDirection()
 
-		switch t.Cmd.Direction {
-		case pb.Direction_N:
-			atomic.AddInt32(&t.Cmd.Y, -t.Speed)
-		case pb.Direction_S:
-			atomic.AddInt32(&t.Cmd.Y, t.Speed)
-		case pb.Direction_E:
-			atomic.AddInt32(&t.Cmd.X, t.Speed)
-		case pb.Direction_W:
-			atomic.AddInt32(&t.Cmd.X, -t.Speed)
-		}
+	// if t.IsColide() {
+	// 	switch t.Cmd.Direction {
+	// 	case pb.Direction_N:
+	// 		atomic.AddInt32(&t.Cmd.Y, t.Speed)
+	// 	case pb.Direction_S:
+	// 		atomic.AddInt32(&t.Cmd.Y, -t.Speed)
+	// 	case pb.Direction_E:
+	// 		atomic.AddInt32(&t.Cmd.X, -t.Speed)
+	// 	case pb.Direction_W:
+	// 		atomic.AddInt32(&t.Cmd.X, t.Speed)
+	// 	}
+	// }
+	// })
 
-		if t.IsColide() {
-			switch t.Cmd.Direction {
-			case pb.Direction_N:
-				atomic.AddInt32(&t.Cmd.Y, t.Speed)
-			case pb.Direction_S:
-				atomic.AddInt32(&t.Cmd.Y, -t.Speed)
-			case pb.Direction_E:
-				atomic.AddInt32(&t.Cmd.X, -t.Speed)
-			case pb.Direction_W:
-				atomic.AddInt32(&t.Cmd.X, t.Speed)
-			}
-		}
-	})
-
-	if err := t.Save(); err != nil {
-		return err
-	}
+	// if err := t.Save(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
 func (t *Tank) ToProtobuf() *pb.TankUpdate {
-	t.Lock()
-	defer t.Unlock()
-
 	var status pb.TankUpdate_Status
 	if t.IsDead() {
 		status = pb.TankUpdate_Dead
@@ -239,19 +235,18 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		status = pb.TankUpdate_Alive
 	}
 	return &pb.TankUpdate{
-		Id:        &t.Cmd.ID,
-		TankId:    &t.ID,
-		X:         &t.Cmd.X,
-		Y:         &t.Cmd.Y,
-		Health:    &t.Health,
-		Name:      &t.Name,
-		FireRate:  &t.FireRate,
-		Bullets:   &t.Bullets,
-		Speed:     &t.Speed,
-		Direction: &t.Cmd.Direction,
-		Angle:     &t.Cmd.Angle,
-		Damage:    &t.Damage,
-		Status:    &status,
+		Id:        t.Cmd.ID,
+		TankId:    t.ID,
+		X:         t.Cmd.X,
+		Y:         t.Cmd.Y,
+		Health:    t.Health,
+		Name:      t.Name,
+		Bullets:   t.Bullets,
+		Speed:     t.Speed,
+		Direction: t.Cmd.Direction,
+		Angle:     t.Cmd.Angle,
+		Damage:    t.Damage,
+		Status:    status,
 	}
 }
 
@@ -265,13 +260,12 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 		return nil, err
 	}
 	tank := &Tank{
-		ID:       pbMsg.GetId(),
-		Name:     pbMsg.GetName(),
-		Health:   pbMsg.GetHealth(),
-		FireRate: pbMsg.GetFireRate(),
-		Speed:    pbMsg.GetSpeed(),
-		Width:    pbMsg.GetWidth(),
-		Height:   pbMsg.GetHeight(),
+		ID:     pbMsg.GetId(),
+		Name:   pbMsg.GetName(),
+		Health: pbMsg.GetHealth(),
+		Speed:  pbMsg.GetSpeed(),
+		Width:  pbMsg.GetWidth(),
+		Height: pbMsg.GetHeight(),
 		TGun: TGun{
 			Bullets:  pbMsg.Gun.GetBullets(),
 			Damage:   pbMsg.Gun.GetDamage(),
@@ -286,7 +280,7 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 		},
 		WSClient: c,
 	}
-	world.Add(tank)
+	// world.Add(tank)
 	return tank, nil
 }
 
@@ -299,7 +293,6 @@ func (t *Tank) Update(pbMsg *pb.Tank) error {
 		t.Name = pbMsg.GetName()
 		t.Health = pbMsg.GetHealth()
 		t.Speed = pbMsg.GetSpeed()
-		t.FireRate = pbMsg.GetFireRate()
 		t.Width = pbMsg.GetWidth()
 		t.Height = pbMsg.GetHeight()
 		t.TGun.Bullets = pbMsg.Gun.GetBullets()
@@ -326,22 +319,21 @@ func (t *Tank) Save() error {
 	t.Lock()
 	{
 		pbMsg = &pb.Tank{
-			Id:       &t.ID,
-			X:        &t.Cmd.X,
-			Y:        &t.Cmd.Y,
-			Name:     &t.Name,
-			Health:   &t.Health,
-			Speed:    &t.Speed,
-			FireRate: &t.FireRate,
-			Width:    &t.Width,
-			Height:   &t.Height,
+			Id:     t.ID,
+			X:      t.Cmd.X,
+			Y:      t.Cmd.Y,
+			Name:   t.Name,
+			Health: t.Health,
+			Speed:  t.Speed,
+			Width:  t.Width,
+			Height: t.Height,
 			Gun: &pb.TankGun{
-				Damage:   &t.TGun.Damage,
-				Bullets:  &t.TGun.Bullets,
-				Distance: &t.TGun.Distance,
+				Damage:   t.TGun.Damage,
+				Bullets:  t.TGun.Bullets,
+				Distance: t.TGun.Distance,
 			},
-			Angle:     &t.Cmd.Angle,
-			Direction: &t.Cmd.Direction,
+			Angle:     t.Cmd.Angle,
+			Direction: t.Cmd.Direction,
 		}
 	}
 	t.Unlock()
@@ -358,7 +350,7 @@ func (t *Tank) Save() error {
 }
 
 func (t *Tank) RemoveTank() error {
-	world.Remove(t)
+	// world.Remove(t)
 	t.Save()
 	return nil
 }

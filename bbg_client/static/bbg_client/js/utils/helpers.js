@@ -56,7 +56,7 @@ export const makeRequest = (rData) => {
 }
 
 export const pprint = (...args) => {
-    if (false) {
+    if (true) {
         console.log(...args);
     }
 }
