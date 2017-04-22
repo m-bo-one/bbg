@@ -17,9 +17,9 @@ const (
 	// Base game tick rate
 	TickRate = 100
 	// Canvas width
-	MapWidth = 1024
+	MapWidth = 1600
 	// Canvas height
-	MapHeight = 768
+	MapHeight = 1600
 	// Cell size
 	CellSize = 10
 )

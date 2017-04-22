@@ -8,7 +8,7 @@ class Tank extends BaseElement {
         super(game, data);
         let x = data.x, y = data.y;
         this.tankSprite = this.game.add.sprite(x, y, tankKey);
-        this.game.midLayer.add(this.tankSprite);
+        this.game.currentState.midLayer.add(this.tankSprite);
 
         this.nextFire = 0;
 
@@ -19,13 +19,13 @@ class Tank extends BaseElement {
         this.turretSprite = this.game.add.sprite(x, y, turretKey);
         this.turretSprite.scale.setTo(0.25, 0.25);
         this.turretSprite.anchor.setTo(0.25, 0.5);
-        this.game.midLayer.add(this.turretSprite);
+        this.game.currentState.midLayer.add(this.turretSprite);
 
         // add nickname
         this.textNick = this.game.add.text(x, y, data.name);
         this.textNick.scale.setTo(0.5);
         this.textNick.anchor.setTo(0.5, 2);
-        this.game.midLayer.add(this.textNick);
+        this.game.currentState.midLayer.add(this.textNick);
 
         this.update(data);
 
@@ -43,6 +43,8 @@ class Tank extends BaseElement {
             game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
             game.currentTank = game.tanks[data.tankId];
 
+            game.camera.follow(game.currentTank.getSprite());
+
             let healthBar = new HealthBar(game, {
                 width: 100 * 2,
                 height: 20,
@@ -54,8 +56,8 @@ class Tank extends BaseElement {
             healthBar.setPosition(130, game.height - 50)
             healthBar.setWidth(data.health * 2);
 
-            game.frontLayer.add(healthBar.bgSprite);
-            game.frontLayer.add(healthBar.barSprite);
+            game.currentState.frontLayer.add(healthBar.bgSprite);
+            game.currentState.frontLayer.add(healthBar.barSprite);
             game.currentTank.healthBar = healthBar;
 
             let callback = game.currentTank.rotate.bind(game.currentTank);

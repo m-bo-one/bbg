@@ -53,9 +53,6 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 }
 
 func (b *Bullet) IsColide() (*Tank, bool) {
-	if b.X < 0 || b.X > MapWidth || b.Y < 0 || b.Y > MapHeight {
-		return nil, true
-	}
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
 			if tank != b.Tank {

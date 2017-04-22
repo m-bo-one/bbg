@@ -15,6 +15,10 @@ class GameState extends Phaser.State {
         this.game.imageLoad('bullet', 'sprites/Bullet.png');
         this.game.imageLoad('lazer', 'sprites/Lazer.png');
 
+        this.game.tilemapLoad('map', 'tilemaps/map.json', null, Phaser.Tilemap.TILED_JSON);
+
+        this.game.imageLoad('tiles', 'tilemaps/roads.png');
+
         if (isDeviceMobile()) {
             this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
             this.game.scale.setShowAll();
@@ -34,9 +38,11 @@ class GameState extends Phaser.State {
         this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
 
-        this.game.backLayer = this.game.add.group();
-        this.game.midLayer = this.game.add.group();
-        this.game.frontLayer = this.game.add.group();
+        this.backLayer = this.game.add.group();
+        this.midLayer = this.game.add.group();
+        this.frontLayer = this.game.add.group();
+
+        this.createMap();
 
         this.cursors = this.game.input.keyboard.addKeys({
             W: Phaser.Keyboard.W,
@@ -60,6 +66,17 @@ class GameState extends Phaser.State {
 
             this.createStatBlock();
         });
+    }
+
+    createMap() {
+        this.map = game.add.tilemap('map');
+        this.map.addTilesetImage('spritesheet', 'tiles');
+
+        let background = this.map.createLayer('Background', undefined, undefined, this.backLayer);
+        background.resizeWorld();
+
+        let road = this.map.createLayer('Road', undefined, undefined, this.backLayer);
+        road.resizeWorld();
     }
 
     createStatBlock() {

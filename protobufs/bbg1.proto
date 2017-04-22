@@ -49,8 +49,8 @@ message Tank {
     optional TankGun gun = 6;
     optional int32 speed = 7 [default = 5];
     optional Direction direction = 8 [default = N];
-    optional uint32 width = 9 [default = 10];
-    optional uint32 height = 10 [default = 10];
+    optional int32 width = 9 [default = 10];
+    optional int32 height = 10 [default = 10];
     optional double angle = 11 [default = 0];
     required string name = 12;
 }

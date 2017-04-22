@@ -31,7 +31,7 @@ type Tank struct {
 	Health        int32
 	FireRate      int32
 	Speed         int32
-	Width, Height uint32
+	Width, Height int32
 	LastShoot     int64
 	Cmd           *Cmd
 	WSClient      *Client
@@ -50,6 +50,13 @@ func (t *Tank) GetY() int32 {
 
 func (t *Tank) GetRadius() int32 {
 	return int32(t.Width+t.Height) / 2
+}
+
+func (t *Tank) IsColide() bool {
+	if t.Cmd.X-t.Speed < 0 || t.Cmd.X+t.Speed > MapWidth || t.Cmd.Y-t.Speed < 0 || t.Cmd.Y+t.Speed > MapHeight {
+		return true
+	}
+	return false
 }
 
 func (t *Tank) GetDamage(b *Bullet) error {
@@ -199,6 +206,19 @@ func (t *Tank) Move(pbMsg *pb.TankMove) error {
 			atomic.AddInt32(&t.Cmd.X, t.Speed)
 		case pb.Direction_W:
 			atomic.AddInt32(&t.Cmd.X, -t.Speed)
+		}
+
+		if t.IsColide() {
+			switch t.Cmd.Direction {
+			case pb.Direction_N:
+				atomic.AddInt32(&t.Cmd.Y, t.Speed)
+			case pb.Direction_S:
+				atomic.AddInt32(&t.Cmd.Y, -t.Speed)
+			case pb.Direction_E:
+				atomic.AddInt32(&t.Cmd.X, -t.Speed)
+			case pb.Direction_W:
+				atomic.AddInt32(&t.Cmd.X, t.Speed)
+			}
 		}
 	})
 

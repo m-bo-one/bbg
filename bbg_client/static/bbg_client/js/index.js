@@ -51,6 +51,10 @@ class Game extends Phaser.Game {
         this.load.image(key, predefinedVars.staticURL + 'bbg_client/img/' + fileName);
     }
 
+    tilemapLoad(key, fileName, ...args) {
+        this.load.tilemap(key, predefinedVars.staticURL + 'bbg_client/img/' + fileName, ...args);
+    }
+
     get currentState() {
         return this.state.states[this.state.current];
     }
