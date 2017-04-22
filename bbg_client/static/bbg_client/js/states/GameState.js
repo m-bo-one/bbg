@@ -10,8 +10,8 @@ class GameState extends Phaser.State {
     }
 
     preload() {
-        this.game.imageLoad('tank', 'sprites/Tank.png');
-        this.game.imageLoad('gun-turret', 'sprites/GunTurret.png');
+        this.game.imageLoad('tank', 'sprites/Tank2.png');
+        this.game.imageLoad('gun-turret', 'sprites/Tank2GunTurret.png');
         this.game.imageLoad('bullet', 'sprites/Bullet.png');
         this.game.imageLoad('lazer', 'sprites/Lazer.png');
 
@@ -86,6 +86,10 @@ class GameState extends Phaser.State {
         this._scoreText = this.game.add.text(initX, initY, `Scores: ${this.initData["scores-count"]}`);
         this._killText = this.game.add.text(initX, initY + offset, `Kills: ${this.initData["kill-count"]}`);
         this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${this.initData["death-count"]}`);
+
+        this._scoreText.fixedToCamera = true; 
+        this._killText.fixedToCamera = true; 
+        this._deathText.fixedToCamera = true; 
     }
 
     createRespawnBlock(counter=3) {
@@ -93,6 +97,7 @@ class GameState extends Phaser.State {
         this._restartText = this.game.add.text(0, 0, `Respawn at: ${counter}`);
         this._restartText.x = this.game.width - 50 - this._restartText.width;
         this._restartText.y = this.game.height - 75;
+        this._restartText.fixedToCamera = true; 
         let id = setInterval(() => {
             counter--;
             if (counter === 0) {

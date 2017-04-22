@@ -8,16 +8,11 @@ class Tank extends BaseElement {
         super(game, data);
         let x = data.x, y = data.y;
         this.tankSprite = this.game.add.sprite(x, y, tankKey);
+        this.tankSprite.anchor.setTo(0.5);
         this.game.currentState.midLayer.add(this.tankSprite);
-
-        this.nextFire = 0;
-
-        this.tankSprite.scale.setTo(0.25, 0.25);
-        this.tankSprite.anchor.setTo(0.5, 0.5);
 
         // initialize turret sprite
         this.turretSprite = this.game.add.sprite(x, y, turretKey);
-        this.turretSprite.scale.setTo(0.25, 0.25);
         this.turretSprite.anchor.setTo(0.25, 0.5);
         this.game.currentState.midLayer.add(this.turretSprite);
 
@@ -55,6 +50,7 @@ class Tank extends BaseElement {
             });
             healthBar.setPosition(130, game.height - 50)
             healthBar.setWidth(data.health * 2);
+            healthBar.setFixedToCamera(true);
 
             game.currentState.frontLayer.add(healthBar.bgSprite);
             game.currentState.frontLayer.add(healthBar.barSprite);
