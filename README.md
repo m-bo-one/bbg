@@ -3,6 +3,8 @@ bbg (http://bbgdev1.ga/)
 
 bbg online tanks
 
+![alt tag](http://image.prntscr.com/image/e510e42d839143cbadc02ce5c294616f.png)
+
 ## Build system requirements
 Go 1.8<br>
 Kafka 1.10.1<br>
