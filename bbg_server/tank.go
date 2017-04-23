@@ -97,9 +97,9 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		return nil
 	}
 
-	if t.isFullReloaded() {
-		return nil
-	}
+	// if t.isFullReloaded() {
+	// 	return nil
+	// }
 
 	t.LastShoot = time.Now().UTC().Unix()
 	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
@@ -210,6 +210,7 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		Angle:     t.Cmd.Angle,
 		Damage:    t.Damage,
 		Status:    status,
+		Timestamp: time.Now().UTC().Unix(),
 	}
 }
 

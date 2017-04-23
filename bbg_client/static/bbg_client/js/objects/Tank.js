@@ -57,6 +57,7 @@ class Tank extends BaseElement {
             game.currentTank.healthBar = healthBar;
 
             game.currentState.createStatBlock();
+            game.currentState.createOrUpdatePing();
 
             let callback = game.currentTank.rotate.bind(game.currentTank);
 

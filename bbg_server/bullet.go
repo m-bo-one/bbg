@@ -38,14 +38,15 @@ func (b *Bullet) GetRadius() int32 {
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	return &pb.BulletUpdate{
-		Id:       b.ID,
-		TankId:   b.Tank.ID,
-		X:        b.X,
-		Y:        b.Y,
-		Angle:    b.Angle,
-		Speed:    b.Speed,
-		Alive:    b.Alive,
-		Distance: b.Distance,
+		Id:        b.ID,
+		TankId:    b.Tank.ID,
+		X:         b.X,
+		Y:         b.Y,
+		Angle:     b.Angle,
+		Speed:     b.Speed,
+		Alive:     b.Alive,
+		Distance:  b.Distance,
+		Timestamp: time.Now().UTC().Unix(),
 	}
 }
 

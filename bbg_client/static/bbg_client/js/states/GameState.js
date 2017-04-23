@@ -77,6 +77,16 @@ class GameState extends Phaser.State {
         road.resizeWorld();
     }
 
+    createOrUpdatePing(ping=0) {
+        if (!this._pingText) {
+            this._pingText = this.game.add.text(0, 20, `Ping: ${ping}`, this.frontLayer);
+            this._pingText.x = this.game.width - this._pingText.width - 20;
+            this._pingText.fixedToCamera = true; 
+        } else {
+            this._pingText.text = `Ping: ${ping}`;
+        }
+    }
+
     createStatBlock() {
         let initX = 30;
         let initY = 20;
@@ -151,6 +161,8 @@ class GameState extends Phaser.State {
         let pData = data[toFirstLowerCase(kData.slice(1))];
 
         if (typeof pData === 'undefined') return;
+
+        this.createOrUpdatePing(pData.timestamp - window.game.sendTime);
 
         pprint('Received message: ', pData)
 

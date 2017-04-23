@@ -25,12 +25,14 @@ message TankRotate {
     int32 y = 3;
     MouseAxes mouseAxes = 4;
     uint32 prevId = 20;
+    int64 timestamp = 99;
 }
 
 message TankMove {
     uint32 id = 1;
     Direction direction = 2;
     uint32 prevId = 20;
+    int64 timestamp = 99;
 }
 
 message TankGun {
@@ -76,17 +78,20 @@ message TankUpdate {
     string name = 13;
 
     uint32 prevId = 20;
+    int64 timestamp = 99;
 }
 
 message TankReg {
     string token = 1;
     string tKey = 2;
+    int64 timestamp = 99;
 }
 
 message TankRemove {
     uint32 id = 1;
     string tankId = 2;
     uint32 prevId = 20;
+    int64 timestamp = 99;
 }
 
 message TankShoot {
@@ -95,6 +100,7 @@ message TankShoot {
     int32 y = 3;
     MouseAxes mouseAxes = 4;
     uint32 prevId = 20;
+    int64 timestamp = 99;
 }
 
 message BulletUpdate {
@@ -106,11 +112,13 @@ message BulletUpdate {
     int32 speed = 6;
     bool alive = 7;
     double distance = 8;
+    int64 timestamp = 99;
 }
 
 message MapUpdate {
     repeated TankUpdate tanks = 1;
     repeated BulletUpdate bullets = 2;
+    int64 timestamp = 99;
 }
 
 message BBGProtocol {

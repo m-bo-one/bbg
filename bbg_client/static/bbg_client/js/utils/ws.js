@@ -85,6 +85,8 @@ class ProtoStream {
             version: 1
         }
         if(data) {
+            data.timestamp = Math.floor(Date.now() / 1000);
+            window.game.sendTime = data.timestamp;
             type = toFirstLowerCase(type);
             prData[type] = data;
         }
