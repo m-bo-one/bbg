@@ -187,7 +187,7 @@ func (c *Client) readPump() {
 
 		log.Debugln("readPump - reading...")
 		if err := c.manageEvent(pbMsg); err != nil {
-			log.Errorln("Proto event error: ", err)
+			log.Warnln("Proto event error: ", err)
 			return
 		}
 	}

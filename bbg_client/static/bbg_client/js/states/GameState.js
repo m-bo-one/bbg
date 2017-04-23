@@ -63,8 +63,6 @@ class GameState extends Phaser.State {
                 this.game.stream.send('TankUnreg');
             };
             window.addEventListener(callbackType, callback);
-
-            this.createStatBlock();
         });
     }
 
@@ -83,13 +81,19 @@ class GameState extends Phaser.State {
         let initX = 30;
         let initY = 20;
         let offset = 30;
-        this._scoreText = this.game.add.text(initX, initY, `Scores: ${this.initData["scores-count"]}`);
-        this._killText = this.game.add.text(initX, initY + offset, `Kills: ${this.initData["kill-count"]}`);
-        this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${this.initData["death-count"]}`);
+        this._scoreText = this.game.add.text(initX, initY, `Scores: ${this.initData["scores-count"]}`, this.frontLayer);
+        this._killText = this.game.add.text(initX, initY + offset, `Kills: ${this.initData["kill-count"]}`, this.frontLayer);
+        this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${this.initData["death-count"]}`, this.frontLayer);
 
         this._scoreText.fixedToCamera = true; 
         this._killText.fixedToCamera = true; 
         this._deathText.fixedToCamera = true; 
+    }
+
+    killStatBlock() {
+        this._scoreText.destroy(); 
+        this._killText.destroy(); 
+        this._deathText.destroy();        
     }
 
     createRespawnBlock(counter=3) {

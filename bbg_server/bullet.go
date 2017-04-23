@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,7 +21,7 @@ type Bullet struct {
 	Distance      float64
 	TotalDistance float64
 
-	sync.Mutex
+	ws *Client
 }
 
 func (b *Bullet) GetX() int32 {
@@ -53,8 +52,8 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 func (b *Bullet) IsColide() (*Tank, bool) {
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
-			if tank != b.Tank {
-				log.Println(tank.WSClient.hub.clients)
+			if tank.ID != b.Tank.ID {
+				log.Println(tank.ws.hub.clients)
 				log.Errorf("Collided with: %+v \n", tank)
 				log.Errorf("%p == %p \n", tank, b.Tank)
 				return tank, true
@@ -72,8 +71,10 @@ func (b *Bullet) UpdateDistance(x float64, y float64) {
 	b.TotalDistance += math.Sqrt(math.Pow(x-b.X, 2) + math.Pow(y-b.Y, 2))
 }
 
-func (b *Bullet) Update(c *Client) {
+func (b *Bullet) Update() {
+	done := make(chan struct{}, 1)
 	ticker := time.NewTicker(time.Second / TickRate)
+	c := b.ws
 
 	defer func() {
 		c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
@@ -92,15 +93,20 @@ func (b *Bullet) Update(c *Client) {
 				b.X = nX
 				b.Y = nY
 			})
-			if tank, isCollide := b.IsColide(); isCollide || b.IsOutOfRange() {
+			if b.IsOutOfRange() {
+				done <- struct{}{}
+			} else if tank, isCollide := b.IsColide(); isCollide {
 				if tank != nil {
 					tank.GetDamage(b)
 					c.sendProtoData(pb.BBGProtocol_TTankUpdate, tank.ToProtobuf(), true)
 				}
-				b.Alive = false
-				return
+				done <- struct{}{}
+			} else {
+				c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
 			}
-			c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
+		case <-done:
+			b.Alive = false
+			return
 		}
 	}
 }
@@ -116,6 +122,7 @@ func NewBullet(tank *Tank) (*Bullet, error) {
 		Angle:    tank.Cmd.Angle,
 		Alive:    true,
 		Distance: tank.TGun.Distance,
+		ws:       tank.ws,
 	}
 	world.Add(b)
 	return b, nil

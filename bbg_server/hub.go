@@ -72,7 +72,7 @@ func (h *Hub) tankMutator(key []byte, value []byte) error {
 
 	if found != nil {
 		found.Update(pbMsg)
-		found.WSClient.sendProtoData(pb.BBGProtocol_TTankUpdate, found.ToProtobuf(), true)
+		found.ws.sendProtoData(pb.BBGProtocol_TTankUpdate, found.ToProtobuf(), true)
 	}
 	return nil
 }

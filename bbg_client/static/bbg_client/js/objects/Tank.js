@@ -56,6 +56,8 @@ class Tank extends BaseElement {
             game.currentState.frontLayer.add(healthBar.barSprite);
             game.currentTank.healthBar = healthBar;
 
+            game.currentState.createStatBlock();
+
             let callback = game.currentTank.rotate.bind(game.currentTank);
 
             game.input.addMoveCallback(callback);
@@ -97,7 +99,10 @@ class Tank extends BaseElement {
         this.tankSprite.destroy();
         this.turretSprite.destroy();
         this.textNick.destroy();
-        if (this === this.game.currentTank) this.healthBar.kill();
+        if (this === this.game.currentTank) {
+            this.healthBar.kill();
+            this.game.currentState.killStatBlock();
+        }
     }
 
     update(data) {

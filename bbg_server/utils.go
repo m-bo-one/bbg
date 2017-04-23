@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"reflect"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
@@ -71,8 +72,9 @@ func AngleFromP2P(iX float64, iY float64, tX float64, tY float64) float64 {
 	return math.Atan2(tY-iY, tX-iX)
 }
 
-func random(min, max float64) float64 {
-	return rand.Float64()*(max-min) + min
+func random(min, max int) int {
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
 }
 
 func checkErr(err error) {

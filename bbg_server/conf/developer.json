@@ -1,6 +1,6 @@
 {
     "Debug": false,
-    "CPUCount": 8,
+    "CPUCount": 1,
     "Addr": "127.0.0.1:8888",
     "ProxyHost": "localhost:4000",
     "ProtocolVersion": 1,
