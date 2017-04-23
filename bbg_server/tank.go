@@ -57,9 +57,11 @@ func (t *Tank) GetDamage(b *Bullet) error {
 	if t.IsDead() {
 		t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
 		b.Tank.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
-		time.Sleep(time.Second * 3)
-		t.Resurect()
-		t.ws.sendProtoData(pb.BBGProtocol_TTankUpdate, t.ToProtobuf(), true)
+		go func() {
+			time.Sleep(time.Second * 3)
+			t.Resurect()
+			t.ws.sendProtoData(pb.BBGProtocol_TTankUpdate, t.ToProtobuf(), true)
+		}()
 	} else {
 		if err := t.Save(); err != nil {
 			return err

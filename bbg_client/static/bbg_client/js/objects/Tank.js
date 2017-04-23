@@ -48,7 +48,7 @@ class Tank extends BaseElement {
                 },
                 animationDuration: 500,
             });
-            healthBar.setPosition(130, game.height - 50)
+            healthBar.setPosition(130, game.height - 50);
             healthBar.setWidth(data.health * 2);
             healthBar.setFixedToCamera(true);
 
