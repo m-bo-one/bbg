@@ -42,6 +42,7 @@ class ProtoStream {
                     'TankMove',
                     'TankShoot',
                     'BulletUpdate',
+                    'Heartbeat',
                 ],
             }
         })
@@ -84,13 +85,11 @@ class ProtoStream {
             type: this.pbProtocol.Type[`T${type}`] || this.pbProtocol.Type.UnhandledType,
             version: 1
         }
-        if(data) {
-            data.timestamp = Math.floor(Date.now() / 1000);
-            window.game.sendTime = data.timestamp;
+        if(typeof data !== undefined) {
             type = toFirstLowerCase(type);
             prData[type] = data;
         }
-        console.log("Obj2pb: ", prData);
+        // console.log("Obj2pb: ", prData);
         let msg = this.pbProtocol.fromObject(prData);
         let encoded = this.pbProtocol.encode(msg).finish();
         this._ws.send(encoded);
@@ -99,9 +98,13 @@ class ProtoStream {
     onmessage(bytearray) {
         let decoded = this.pbProtocol.decode(bytearray);
         if (Object.keys(decoded).length != 0) {
-            pprint('decoded: ', decoded);
+            // pprint('decoded: ', decoded);
             game.currentState.wsUpdate(decoded);
         }
+    }
+
+    getPing() {
+        this.send('Ping', {timestamp: Math.floor(Date.now() / 1000)});
     }
 
     loadProtos(pdata) {

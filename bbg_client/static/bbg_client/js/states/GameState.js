@@ -18,15 +18,6 @@ class GameState extends Phaser.State {
         this.game.tilemapLoad('map', 'tilemaps/map.json', null, Phaser.Tilemap.TILED_JSON);
 
         this.game.imageLoad('tiles', 'tilemaps/roads.png');
-
-        if (isDeviceMobile()) {
-            this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            this.game.scale.setShowAll();
-            window.addEventListener('resize', function () {
-                this.game.scale.refresh();
-            });
-            this.game.scale.refresh();
-        }
     }
 
     create() {
@@ -35,7 +26,7 @@ class GameState extends Phaser.State {
         this.game.clearMenu();
         this.game.startGameSheet();
 
-        this.game.canvas.style.border = "1px solid black";
+        // this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
 
         this.backLayer = this.game.add.group();
@@ -43,6 +34,8 @@ class GameState extends Phaser.State {
         this.frontLayer = this.game.add.group();
 
         this.createMap();
+
+        this.tickRate = 120;
 
         this.cursors = this.game.input.keyboard.addKeys({
             W: Phaser.Keyboard.W,
@@ -75,6 +68,8 @@ class GameState extends Phaser.State {
 
         let road = this.map.createLayer('Road', undefined, undefined, this.backLayer);
         road.resizeWorld();
+
+        // this.world.setBounds(0, 0, 2000, 2000);
     }
 
     createOrUpdatePing(ping=0) {
@@ -155,6 +150,17 @@ class GameState extends Phaser.State {
         // this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
     }
 
+    startHeartbeat() {
+        this._shId = setInterval(() => {
+            this.game.stream.send('Heartbeat', {});
+        }, 1000 / this.tickRate);
+    }
+
+    stopHeartbeat() {
+        clearInterval(this._shId);
+        delete this._shId;
+    }
+
     wsUpdate(data) {
         let stream = this.game.stream;
         let kData = getKeyByValue(stream.pbProtocol.Type, data.type);
@@ -162,9 +168,9 @@ class GameState extends Phaser.State {
 
         if (typeof pData === 'undefined') return;
 
-        this.createOrUpdatePing(pData.timestamp - window.game.sendTime);
+        // stream.getPing();
 
-        pprint('Received message: ', pData)
+        // pprint('Received message: ', pData)
 
         switch(data.type) {
             case stream.pbProtocol.Type.TMapUpdate:
@@ -178,14 +184,17 @@ class GameState extends Phaser.State {
             case stream.pbProtocol.Type.TTankNew:
                 Tank.wsCreate(game, pData);
                 break;
-            case stream.pbProtocol.Type.TTankUpdate:
-                Tank.wsUpdate(game, pData);
-                break;
             case stream.pbProtocol.Type.TTankRemove:
                 Tank.wsRemove(game, pData);
                 break;
+            case stream.pbProtocol.Type.TTankUpdate:
+                Tank.wsUpdate(game, pData);
+                break;
             case stream.pbProtocol.Type.TBulletUpdate:
                 Bullet.wsUpdate(game, pData);
+                break;
+            case stream.pbProtocol.Type.TPong:
+                this.createOrUpdatePing(pData.timestamp - pData.processed);
                 break;
             case stream.pbProtocol.Type.TUnhandledType:
                 pprint('Unhandled type receive. Data: ', data);

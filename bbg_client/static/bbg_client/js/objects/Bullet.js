@@ -10,7 +10,7 @@ class Bullet extends BaseElement {
         this.tank = tank;
 
         this.bulletSprite = this.game.add.sprite(x, y, key);
-        this.bulletSprite.scale.setTo(0.25, 0.25);
+        this.bulletSprite.scale.setTo(0.5);
         this.bulletSprite.anchor.setTo(0.5, 0.5);
         this.game.currentState.midLayer.add(this.bulletSprite);
 
@@ -60,7 +60,6 @@ class Bullet extends BaseElement {
         this.tankId = data.tankId;
         this.alive = data.alive;
         this.updatedAt = Math.floor(Date.now() / 1000);
-
         if (!this.alive) {
             this.destroy();
         }

@@ -9,16 +9,18 @@ class Tank extends BaseElement {
         let x = data.x, y = data.y;
         this.tankSprite = this.game.add.sprite(x, y, tankKey);
         this.tankSprite.anchor.setTo(0.5);
+        this.tankSprite.scale.setTo(this.game.scaleRatio, this.game.scaleRatio);
         this.game.currentState.midLayer.add(this.tankSprite);
 
         // initialize turret sprite
         this.turretSprite = this.game.add.sprite(x, y, turretKey);
         this.turretSprite.anchor.setTo(0.25, 0.5);
+        this.turretSprite.scale.setTo(this.game.scaleRatio, this.game.scaleRatio);
         this.game.currentState.midLayer.add(this.turretSprite);
 
         // add nickname
         this.textNick = this.game.add.text(x, y, data.name);
-        this.textNick.scale.setTo(0.5);
+        this.textNick.scale.setTo(this.game.scaleRatio, this.game.scaleRatio);
         this.textNick.anchor.setTo(0.5, 2);
         this.game.currentState.midLayer.add(this.textNick);
 
@@ -57,11 +59,12 @@ class Tank extends BaseElement {
             game.currentTank.healthBar = healthBar;
 
             game.currentState.createStatBlock();
-            game.currentState.createOrUpdatePing();
 
             let callback = game.currentTank.rotate.bind(game.currentTank);
 
             game.input.addMoveCallback(callback);
+
+            game.currentState.startHeartbeat();
         }
     }
 
@@ -107,8 +110,13 @@ class Tank extends BaseElement {
     }
 
     update(data) {
-        if (this === this.game.currentTank && data.health != this.health)
-            this.healthBar.setWidth(data.health * 2);
+        if (this === this.game.currentTank && data.health != this.health) {
+            if (data.health < 0) {
+                this.healthBar.setWidth(0);
+            } else {
+                this.healthBar.setWidth(data.health * 2);
+            }
+        }
 
         this.id = data.tankId;
         this.fireRate = data.fireRate;

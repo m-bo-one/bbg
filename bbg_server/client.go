@@ -90,7 +90,12 @@ func (c *Client) validateTKey(token string, tKey string) (string, error) {
 }
 
 func (c *Client) manageEvent(message *pb.BBGProtocol) error {
+	log.Debugf("BBG: Incomming message: %+v \n", message)
 	switch message.Type {
+	case pb.BBGProtocol_THeartbeat:
+		if c.tank != nil {
+			c.sendProtoData(pb.BBGProtocol_TMapUpdate, c.mapToProtobuf(), false)
+		}
 	case pb.BBGProtocol_TTankUnreg:
 		if c.tank == nil {
 			return errors.New("TankUnreg: Tank does not exist")
@@ -122,7 +127,6 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 		}
 		c.tank = tank
 		c.sendProtoData(pb.BBGProtocol_TTankNew, c.tank.ToProtobuf(), false)
-		c.sendProtoData(pb.BBGProtocol_TMapUpdate, c.mapToProtobuf(), false)
 
 	case pb.BBGProtocol_TTankMove:
 		if c.tank == nil {
@@ -148,15 +152,16 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 			return fmt.Errorf("TankShoot: Got error while shooting: %s", err)
 		}
 
+	case pb.BBGProtocol_TPing:
+		c.sendProtoData(pb.BBGProtocol_TPong, &pb.Pong{
+			Timestamp: time.Now().UTC().Unix(),
+			Processed: message.GetPing().Timestamp,
+		}, false)
+		return nil
+
 	default:
 		c.sendProtoData(pb.BBGProtocol_TUnhandledType, nil, false)
 		return nil
-	}
-
-	log.Debugf("BBG: Incomming message: %+v \n", message)
-
-	if c.tank != nil {
-		c.sendProtoData(pb.BBGProtocol_TTankUpdate, c.tank.ToProtobuf(), true)
 	}
 
 	return nil

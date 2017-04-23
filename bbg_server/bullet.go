@@ -3,7 +3,6 @@ package main
 import (
 	"math"
 	"sync/atomic"
-	"time"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
@@ -38,15 +37,14 @@ func (b *Bullet) GetRadius() int32 {
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	return &pb.BulletUpdate{
-		Id:        b.ID,
-		TankId:    b.Tank.ID,
-		X:         b.X,
-		Y:         b.Y,
-		Angle:     b.Angle,
-		Speed:     b.Speed,
-		Alive:     b.Alive,
-		Distance:  b.Distance,
-		Timestamp: time.Now().UTC().Unix(),
+		Id:       b.ID,
+		TankId:   b.Tank.ID,
+		X:        b.X,
+		Y:        b.Y,
+		Angle:    b.Angle,
+		Speed:    b.Speed,
+		Alive:    b.Alive,
+		Distance: b.Distance,
 	}
 }
 
@@ -54,9 +52,8 @@ func (b *Bullet) IsColide() (*Tank, bool) {
 	for _, other := range world.Nearby(b) {
 		if tank, ok := other.(*Tank); ok {
 			if tank.ID != b.Tank.ID {
-				log.Println(tank.ws.hub.clients)
-				log.Errorf("Collided with: %+v \n", tank)
-				log.Errorf("%p == %p \n", tank, b.Tank)
+				log.Debugf("Collided with: %+v \n", tank)
+				log.Debugf("%p == %p \n", tank, b.Tank)
 				return tank, true
 			}
 		}
@@ -72,44 +69,26 @@ func (b *Bullet) UpdateDistance(x float64, y float64) {
 	b.TotalDistance += math.Sqrt(math.Pow(x-b.X, 2) + math.Pow(y-b.Y, 2))
 }
 
-func (b *Bullet) Update() {
-	done := make(chan struct{}, 1)
-	ticker := time.NewTicker(time.Second / TickRate)
-	c := b.ws
-
-	defer func() {
-		c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
-		ticker.Stop()
-		world.Remove(b)
-	}()
-
+func (b *Bullet) Update() bool {
 	speed := float64(b.Speed)
-	for {
-		select {
-		case <-ticker.C:
-			world.Update(b, func() {
-				nX := b.X + math.Cos(b.Angle)*speed
-				nY := b.Y + math.Sin(b.Angle)*speed
-				b.UpdateDistance(nX, nY)
-				b.X = nX
-				b.Y = nY
-			})
-			if b.IsOutOfRange() {
-				done <- struct{}{}
-			} else if tank, isCollide := b.IsColide(); isCollide {
-				if tank != nil {
-					tank.GetDamage(b)
-					c.sendProtoData(pb.BBGProtocol_TTankUpdate, tank.ToProtobuf(), true)
-				}
-				done <- struct{}{}
-			} else {
-				c.sendProtoData(pb.BBGProtocol_TBulletUpdate, b.ToProtobuf(), true)
+	world.Update(b, func() {
+		nX := b.X + math.Cos(b.Angle)*speed
+		nY := b.Y + math.Sin(b.Angle)*speed
+		b.UpdateDistance(nX, nY)
+		b.X = nX
+		b.Y = nY
+	})
+	if tank, isCollide := b.IsColide(); b.IsOutOfRange() || isCollide {
+		if tank != nil {
+			if !tank.IsDead() {
+				tank.GetDamage(b)
 			}
-		case <-done:
-			b.Alive = false
-			return
 		}
+		b.Alive = false
+		world.Remove(b)
+		return false
 	}
+	return true
 }
 
 func NewBullet(tank *Tank) (*Bullet, error) {

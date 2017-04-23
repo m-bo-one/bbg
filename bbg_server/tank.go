@@ -28,6 +28,7 @@ type Tank struct {
 	LastShoot     int64
 	Cmd           *Cmd
 	ws            *Client
+	bullets       []*Bullet
 
 	TGun
 	sync.RWMutex
@@ -55,12 +56,12 @@ func (t *Tank) IsColide() bool {
 func (t *Tank) GetDamage(b *Bullet) error {
 	t.Health -= int32(b.Tank.Damage)
 	if t.IsDead() {
-		t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
-		b.Tank.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
+		world.Remove(t)
+		go t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
+		go b.Tank.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
 		go func() {
 			time.Sleep(time.Second * 3)
 			t.Resurect()
-			t.ws.sendProtoData(pb.BBGProtocol_TTankUpdate, t.ToProtobuf(), true)
 		}()
 	} else {
 		if err := t.Save(); err != nil {
@@ -87,7 +88,7 @@ func (t *Tank) Resurect() error {
 }
 
 func (t *Tank) isFullReloaded() bool {
-	return time.Now().UTC().Unix() < t.LastShoot+2
+	return time.Now().UTC().Unix() < t.LastShoot+1
 }
 
 // Shoot command for tank
@@ -97,10 +98,9 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		return nil
 	}
 
-	// if t.isFullReloaded() {
-	// 	return nil
-	// }
-
+	if t.isFullReloaded() {
+		return nil
+	}
 	t.LastShoot = time.Now().UTC().Unix()
 	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
 	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
@@ -109,7 +109,7 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 	if err != nil {
 		return err
 	}
-	go bullet.Update()
+	t.bullets = append(t.bullets, bullet)
 
 	if err := t.Save(); err != nil {
 		return err
@@ -210,7 +210,6 @@ func (t *Tank) ToProtobuf() *pb.TankUpdate {
 		Angle:     t.Cmd.Angle,
 		Damage:    t.Damage,
 		Status:    status,
-		Timestamp: time.Now().UTC().Unix(),
 	}
 }
 

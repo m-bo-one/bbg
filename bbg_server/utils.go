@@ -93,6 +93,12 @@ func getTanksToProtobuf(hub *Hub) (tanks []*pb.TankUpdate) {
 }
 
 func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
-	// TODO
+	for client, active := range hub.clients {
+		if active && client.tank != nil && client.tank.bullets != nil {
+			for _, bullet := range client.tank.bullets {
+				bullets = append(bullets, bullet.ToProtobuf())
+			}
+		}
+	}
 	return
 }

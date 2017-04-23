@@ -15,9 +15,9 @@ import (
 
 const (
 	// Base game tick rate
-	TickRate = 100
+	TickRate = 66
 	// Canvas width
-	MapWidth = 1600
+	MapWidth = 2240
 	// Canvas height
 	MapHeight = 1600
 	// Cell size
@@ -76,6 +76,7 @@ func main() {
 	hub := NewHub(*dbClient)
 	go hub.run()
 	go hub.listenPushService("tank_update", 0)
+	go hub.startGameLoop()
 
 	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
 		serveWS(hub, w, r)
