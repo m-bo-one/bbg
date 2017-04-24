@@ -6,7 +6,10 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"path"
 	"reflect"
+	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -108,6 +111,8 @@ func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
 }
 
 func ReadTmxAndUpdateMap(fName string) error {
+	_, fileName, _, _ := runtime.Caller(1)
+	fName = strings.Join([]string{path.Dir(fileName), "/", fName}, "")
 	r, err := os.Open(fName)
 	if err != nil {
 		log.Errorln("Tmx: Error during open: ", err)
