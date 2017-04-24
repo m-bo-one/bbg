@@ -67,6 +67,9 @@ func serveWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Initialize game map
+	err := ReadTmxAndUpdateMap("map.tmx")
+	checkErr(err)
 	// Initialize new db client
 	dbClient, err := NewDBClient(appConf)
 	checkErr(err)

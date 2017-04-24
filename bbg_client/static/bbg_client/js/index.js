@@ -5,7 +5,7 @@ import MenuState from 'states/MenuState';
 class Game extends Phaser.Game {
 
     constructor() {
-        super(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.CANVAS, 'content', null);
+        super(window.innerWidth, window.innerHeight, Phaser.CANVAS, 'content', null);
 
         this.preMenu = document.getElementById("pre-menu");
         this.menu = document.getElementById("menu");
@@ -14,7 +14,7 @@ class Game extends Phaser.Game {
         this.state.add('MenuState', MenuState, false);
         this.state.add('GameState', GameState, false);
 
-        this.scaleRatio = window.devicePixelRatio / 1.25;
+        this.scaleRatio = 0.8;
 
         (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
     }

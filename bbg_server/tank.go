@@ -35,11 +35,11 @@ type Tank struct {
 }
 
 func (t *Tank) GetX() int32 {
-	return t.Cmd.X
+	return t.Cmd.X - int32(t.Width)/2
 }
 
 func (t *Tank) GetY() int32 {
-	return t.Cmd.Y
+	return t.Cmd.Y - int32(t.Height)/2
 }
 
 func (t *Tank) GetWidth() int32 {
@@ -51,7 +51,11 @@ func (t *Tank) GetHeight() int32 {
 }
 
 func (t *Tank) IsColide() bool {
-	if t.Cmd.X-t.Speed < 0 || t.Cmd.X+t.Speed > MapWidth || t.Cmd.Y-t.Speed < 0 || t.Cmd.Y+t.Speed > MapHeight {
+	if t.Cmd.X-t.Speed < 0 ||
+		t.Cmd.X+t.Speed > MapWidth ||
+		t.Cmd.Y-t.Speed < 0 ||
+		t.Cmd.Y+t.Speed > MapHeight ||
+		len(world.Nearby(t)) > 0 {
 		return true
 	}
 	return false

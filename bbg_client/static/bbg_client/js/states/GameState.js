@@ -18,6 +18,17 @@ class GameState extends Phaser.State {
         this.game.tilemapLoad('map', 'tilemaps/map.json', null, Phaser.Tilemap.TILED_JSON);
 
         this.game.imageLoad('tiles', 'tilemaps/roads.png');
+
+        this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        this.game.scale.pageAlignHorizontally = true;
+        this.game.scale.pageAlignVertically = true;
+        this.game.scale.forceLandscape = true;
+        this.game.scale.parentIsWindow = true;
+        this.game.scale.refresh();
+
+        window.addEventListener('resize', () => {
+            this.game.scale.refresh();
+        });
     }
 
     create() {

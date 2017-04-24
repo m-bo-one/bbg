@@ -47,7 +47,7 @@ func (sh *SpatialHash) Set(key int32, value []object) {
 
 func (sh *SpatialHash) HashIds(o object) []int32 {
 	ids := []int32{}
-	min := &Vector{o.GetX() - o.GetWidth(), o.GetY() - o.GetHeight()}
+	min := &Vector{o.GetX(), o.GetY()}
 	max := &Vector{o.GetX() + o.GetWidth(), o.GetY() + o.GetHeight()}
 
 	_append := func(slice []int32, i int32) []int32 {
@@ -64,10 +64,11 @@ func (sh *SpatialHash) HashIds(o object) []int32 {
 		ids = _append(ids, sh.hashID(v))
 	}
 
-	add(&Vector{min.X, max.Y}) // top left
-	add(&Vector{max.X, max.Y}) // top right
-	add(&Vector{max.X, min.Y}) // bottom right
-	add(min)                   // bottom left
+	for x := min.X; x < max.X+1; x++ {
+		for y := min.Y; y < max.Y+1; y++ {
+			add(&Vector{x, y})
+		}
+	}
 
 	return ids
 }

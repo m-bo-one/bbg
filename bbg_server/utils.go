@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"reflect"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
+	"github.com/DeV1doR/bbg/bbg_server/engine"
+	"github.com/DeV1doR/bbg/bbg_server/engine/tmx"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	log "github.com/Sirupsen/logrus"
 )
 
 func Keys(v interface{}) ([]string, error) {
@@ -101,4 +105,33 @@ func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
 		}
 	}
 	return
+}
+
+func ReadTmxAndUpdateMap(fName string) error {
+	r, err := os.Open(fName)
+	if err != nil {
+		log.Errorln("Tmx: Error during open: ", err)
+		return err
+	}
+	defer r.Close()
+
+	m, err := tmx.Read(r)
+	if err != nil {
+		log.Errorln("Tmx: Error during read: ", err)
+		return err
+	}
+
+	for _, objectGroup := range m.ObjectGroups {
+		for _, object := range objectGroup.Objects {
+			world.Add(&engine.MapObject{
+				X:      object.X,
+				Y:      object.Y,
+				Width:  object.Width,
+				Height: object.Height,
+				Type:   objectGroup.Name,
+			})
+		}
+	}
+	log.Infoln("Tmx: Successfully read")
+	return nil
 }

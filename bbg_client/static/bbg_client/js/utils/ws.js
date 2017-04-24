@@ -51,6 +51,11 @@ class ProtoStream {
 
     retry(url, callback, ...args) {
         game.stream._ws.close();
+        try {
+            game.currentState.stopHeartbeat();
+        } catch(e) {
+            console.log(e);
+        }
         console.log('restarting...');
         try {
             setTimeout(() => {
