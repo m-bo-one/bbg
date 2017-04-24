@@ -8,7 +8,8 @@ import (
 type object interface {
 	GetX() int32
 	GetY() int32
-	GetRadius() int32
+	GetWidth() int32
+	GetHeight() int32
 }
 
 type Vector struct {
@@ -46,8 +47,8 @@ func (sh *SpatialHash) Set(key int32, value []object) {
 
 func (sh *SpatialHash) HashIds(o object) []int32 {
 	ids := []int32{}
-	min := &Vector{o.GetX() - o.GetRadius(), o.GetY() - o.GetRadius()}
-	max := &Vector{o.GetX() + o.GetRadius(), o.GetY() + o.GetRadius()}
+	min := &Vector{o.GetX() - o.GetWidth(), o.GetY() - o.GetHeight()}
+	max := &Vector{o.GetX() + o.GetWidth(), o.GetY() + o.GetHeight()}
 
 	_append := func(slice []int32, i int32) []int32 {
 		for _, other := range slice {

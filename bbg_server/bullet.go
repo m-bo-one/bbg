@@ -31,7 +31,11 @@ func (b *Bullet) GetY() int32 {
 	return int32(b.Y)
 }
 
-func (b *Bullet) GetRadius() int32 {
+func (b *Bullet) GetWidth() int32 {
+	return 5
+}
+
+func (b *Bullet) GetHeight() int32 {
 	return 5
 }
 

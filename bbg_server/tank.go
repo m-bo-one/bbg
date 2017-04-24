@@ -42,8 +42,12 @@ func (t *Tank) GetY() int32 {
 	return t.Cmd.Y
 }
 
-func (t *Tank) GetRadius() int32 {
-	return int32(t.Width+t.Height) / 2
+func (t *Tank) GetWidth() int32 {
+	return int32(t.Width)
+}
+
+func (t *Tank) GetHeight() int32 {
+	return int32(t.Height)
 }
 
 func (t *Tank) IsColide() bool {
