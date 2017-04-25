@@ -60,8 +60,7 @@ class Tank extends BaseElement {
         return this.health <= 0;
     }
 
-    changeColor(color) {
-        this._lastColor = this.tankSprite.tint;
+    changeColor(color=null) {
         this.tankSprite.tint = color;
         this.turretSprite.tint = color;
     }

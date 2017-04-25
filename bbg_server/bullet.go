@@ -5,7 +5,6 @@ import (
 	"sync/atomic"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
-	log "github.com/Sirupsen/logrus"
 )
 
 var bulletIDCounter uint32
@@ -52,17 +51,22 @@ func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
 	}
 }
 
-func (b *Bullet) IsColide() (*Tank, bool) {
-	for _, other := range world.Nearby(b) {
-		if tank, ok := other.(*Tank); ok {
-			if tank.ID != b.Tank.ID {
-				log.Debugf("Collided with: %+v \n", tank)
-				log.Debugf("%p == %p \n", tank, b.Tank)
-				return tank, true
+func (b *Bullet) IsColide() bool {
+	for _, i := range world.Nearby(b) {
+		switch object := i.(type) {
+		case *Tank:
+			if object.ID != b.Tank.ID {
+				if !object.IsDead() {
+					object.GetDamage(b)
+				}
+				return true
 			}
+		case *Bullet:
+			object.Alive = false
+			return true
 		}
 	}
-	return nil, false
+	return false
 }
 
 func (b *Bullet) IsOutOfRange() bool {
@@ -82,12 +86,7 @@ func (b *Bullet) Update() bool {
 		b.X = nX
 		b.Y = nY
 	})
-	if tank, isCollide := b.IsColide(); b.IsOutOfRange() || isCollide {
-		if tank != nil {
-			if !tank.IsDead() {
-				tank.GetDamage(b)
-			}
-		}
+	if b.IsOutOfRange() || b.IsColide() {
 		b.Alive = false
 		world.Remove(b)
 		return false

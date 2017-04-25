@@ -1,5 +1,6 @@
 import BaseElement from 'objects/BaseElement';
 import HealthBar from 'objects/HealthBar';
+import ScoreBoard from 'objects/ScoreBoard';
 
 class HUD extends BaseElement {
 
@@ -8,7 +9,8 @@ class HUD extends BaseElement {
         this.tankId = data.tankId;
         this.group = group;
         this.createHealthBar(data);
-        this.createStatBlock(data);
+        this.createScoreBoard(data);
+        // this.createStatBlock(data);
     }
 
     // createOrUpdatePing(ping=0) {
@@ -40,7 +42,7 @@ class HUD extends BaseElement {
             }
         }
         if (this.tank.isDead()) {
-            this.changeColor(0xff9a22);
+            this.tank.changeColor(0xff9a22);
         } else {
             // HARDCODED VALUE OF COLOR
             this.tank.changeColor(16777215);
@@ -71,24 +73,29 @@ class HUD extends BaseElement {
         this.group.add(this._healthBar.barSprite);
     }
 
-    createStatBlock(data) {
-        let initX = 30;
-        let initY = 20;
-        let offset = 30;
-        this._scoreText = this.game.add.text(initX, initY, `Scores: ${data["scores-count"]}`, this.group);
-        this._killText = this.game.add.text(initX, initY + offset, `Kills: ${data["kill-count"]}`, this.group);
-        this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${data["death-count"]}`, this.group);
-
-        this._scoreText.fixedToCamera = true; 
-        this._killText.fixedToCamera = true; 
-        this._deathText.fixedToCamera = true; 
+    createScoreBoard(data) {
+        this._scoreBoard = new ScoreBoard(this.game);
+        this._scoreBoard.setGroup(this.group);
     }
 
-    killStatBlock() {
-        this._scoreText.destroy(); 
-        this._killText.destroy(); 
-        this._deathText.destroy();        
-    }
+    // createStatBlock(data) {
+    //     let initX = 30;
+    //     let initY = 20;
+    //     let offset = 30;
+    //     this._scoreText = this.game.add.text(initX, initY, `Scores: ${data["scores-count"]}`, this.group);
+    //     this._killText = this.game.add.text(initX, initY + offset, `Kills: ${data["kill-count"]}`, this.group);
+    //     this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${data["death-count"]}`, this.group);
+
+    //     this._scoreText.fixedToCamera = true; 
+    //     this._killText.fixedToCamera = true; 
+    //     this._deathText.fixedToCamera = true; 
+    // }
+
+    // killStatBlock() {
+    //     this._scoreText.destroy(); 
+    //     this._killText.destroy(); 
+    //     this._deathText.destroy();        
+    // }
 
     createRespawnBlock(data) {
         if (typeof this._restartText === "object") return;

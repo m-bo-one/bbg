@@ -192,7 +192,7 @@ function serve() {
     
     var options = {
         ui: false,
-        proxy: '127.0.0.1:8000',
+        proxy: 'local.bbgdev1.ga',
         open: false,
         notify: false,
         port: 8001,
@@ -202,7 +202,7 @@ function serve() {
     
     browserSync.init(options);
 
-    gulp.watch('./**/*.py', ['watch-py']);
+    // gulp.watch('./**/*.py', ['watch-py']);
 
     // Watches for changes in files inside the './src' folder.
     gulp.watch(SOURCE_PATH + '/**/*.js', ['watch-js']);
@@ -233,10 +233,10 @@ gulp.task('fastBuild', build);
 gulp.task('serve', ['build'], serve);
 
 if (!isProduction()) {
-    gulp.task('watch-py', [], browserSync.reload);
+    // gulp.task('watch-py', [], browserSync.reload);
     gulp.task('watch-js', ['fastBuild'], browserSync.reload);
-    gulp.task('watch-static', ['copyJS', 'copyCSS'], browserSync.reload);
-    gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf'], browserSync.reload);
+    gulp.task('watch-static', ['copyJS', 'copyCSS']);
+    gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf']);
 }
 
 gulp.task('default', ['serve']);
