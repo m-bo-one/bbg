@@ -21,20 +21,6 @@ class Bullet extends BaseElement {
         this._worker = setInterval(() => this.gcCleaner(), 1000);
     }
 
-    static wsUpdate(game, data) {
-        if (game.tanks.hasOwnProperty(data.tankId)) {
-            let tank = game.tanks[data.tankId];
-            let bullet;
-            if (tank.bullets.hasOwnProperty(data.id)) {
-                // console.log(`Update bullet position...`);
-                tank.bullets[data.id].update(data);
-            } else {
-                // console.log(`Creating new bullet...`);
-                new Bullet(game, data, 'bullet', tank);
-            }
-        }
-    }
-
     gcCleaner() {
         if (!this.alive || Math.floor(Date.now() / 1000) > this.updatedAt + 2) {
             this.destroy();

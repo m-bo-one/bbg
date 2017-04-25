@@ -95,18 +95,22 @@ function copyProtobuf() {
  */
 function updateGoProtobuf() {
     // golang
-    exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs')
+    exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs');
     // del([SERVER_PATH.substr(2) + '/protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
-         '--go_out=' + SERVER_PATH.substr(2) + '/protobufs')
+         '--go_out=' + SERVER_PATH.substr(2) + '/protobufs');
 
     // python
-    exec('mkdir -p protobufs')
+    exec('mkdir -p protobufs');
     // del(['protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
-         '--python_out=protobufs')
+         '--python_out=protobufs');
+}
+
+function copyDjangoStatic() {
+     exec('workon bbg && ./manage.py collectstatic --noinput');
 }
 
 function copyJS() {
@@ -219,7 +223,8 @@ function serve() {
 
 
 gulp.task('cleanBuild', cleanBuild);
-gulp.task('copyCSS', ['cleanBuild'], copyCSS);
+gulp.task('copyDjangoStatic', ['cleanBuild'], copyDjangoStatic);
+gulp.task('copyCSS', ['copyDjangoStatic'], copyCSS);
 gulp.task('copyJS', ['copyCSS'], copyJS);
 gulp.task('copyProtobuf', ['copyJS'], copyProtobuf);
 gulp.task('updateGoProtobuf', ['copyProtobuf'], updateGoProtobuf);

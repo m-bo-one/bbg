@@ -26,7 +26,7 @@ class ProtoStream {
         };
         this._ws.onclose = (e) => {
             pprint('ws closed', e);
-            this.retry(url, callback, ...args);
+            // this.retry(url, callback, ...args);
         };
         this._ws.onerror = (e) => {
             pprint('ws error', e);
@@ -49,23 +49,23 @@ class ProtoStream {
         this.onLoadComplete();
     }
 
-    retry(url, callback, ...args) {
-        game.stream._ws.close();
-        try {
-            game.currentState.stopHeartbeat();
-        } catch(e) {
-            console.log(e);
-        }
-        console.log('restarting...');
-        try {
-            setTimeout(() => {
-                game.stream = new ProtoStream(url, callback, ...args);
-                pprint('successfully restarted.');
-            }, 2000);
-        } catch (e) {
-            pprint('failed, trying again...');
-        }
-    }
+    // retry(url, callback, ...args) {
+    //     game.stream._ws.close();
+    //     try {
+    //         game.currentState.stopHeartbeat();
+    //     } catch(e) {
+    //         console.log(e);
+    //     }
+    //     console.log('restarting...');
+    //     try {
+    //         setTimeout(() => {
+    //             game.stream = new ProtoStream(url, callback, ...args);
+    //             pprint('successfully restarted.');
+    //         }, 2000);
+    //     } catch (e) {
+    //         pprint('failed, trying again...');
+    //     }
+    // }
 
     get connected() {
         return this._ws.readyState == this._ws.OPEN && this.proto.loaded;

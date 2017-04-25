@@ -1,5 +1,5 @@
 import BaseElement from 'objects/BaseElement';
-import HealthBar from 'objects/HealthBar';
+import HUD from 'objects/HUD';
 import {pprint} from 'utils/helpers';
 
 class Tank extends BaseElement {
@@ -34,67 +34,6 @@ class Tank extends BaseElement {
         this.bullets = {};
     }
 
-    static wsCreate(game, data) {
-        if (!game.tanks.hasOwnProperty(data.tankId)) {
-            pprint('Creating new tank...');
-            game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
-            game.currentTank = game.tanks[data.tankId];
-
-            game.camera.follow(game.currentTank.getSprite());
-
-            let healthBar = new HealthBar(game, {
-                width: 100 * 2,
-                height: 20,
-                bar: {
-                  color: 'red'
-                },
-                animationDuration: 500,
-            });
-            healthBar.setPosition(130, game.height - 50);
-            healthBar.setWidth(data.health * 2);
-            healthBar.setFixedToCamera(true);
-
-            game.currentState.frontLayer.add(healthBar.bgSprite);
-            game.currentState.frontLayer.add(healthBar.barSprite);
-            game.currentTank.healthBar = healthBar;
-
-            game.currentState.createStatBlock();
-
-            let callback = game.currentTank.rotate.bind(game.currentTank);
-
-            game.input.addMoveCallback(callback);
-
-            game.currentState.startHeartbeat();
-        }
-    }
-
-    static wsUpdate(game, data) {
-        pprint('Receive tank update. Applying...');
-        if (!game.tanks.hasOwnProperty(data.tankId)) {
-            pprint('Creating new tank...');
-            game.tanks[data.tankId] = new Tank(game, data, 'tank', 'gun-turret');
-        } else {
-            game.tanks[data.tankId].update(data);
-        }
-    }
-
-    static wsRemove(game, data) {
-        if (game.tanks.hasOwnProperty(data.tankId)) {
-            pprint(`Removing tank ID:${data.tankId}...`);
-
-            if (game.currentTank && game.currentTank.id == data.tankId) {
-                // game.currentTank.destroy();
-                // delete game.currentTank;
-                let keyboard = game.input.keyboard;
-                keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
-                game.input.moveCallbacks = [];
-            } else {
-                game.tanks[data.tankId].destroy();
-                delete game.tanks[data.tankId];
-            }
-        }
-    }
-
     getSprite() {
         return this.tankSprite;
     }
@@ -103,21 +42,9 @@ class Tank extends BaseElement {
         this.tankSprite.destroy();
         this.turretSprite.destroy();
         this.textNick.destroy();
-        if (this === this.game.currentTank) {
-            this.healthBar.kill();
-            this.game.currentState.killStatBlock();
-        }
     }
 
     update(data) {
-        if (this === this.game.currentTank && data.health != this.health) {
-            if (data.health < 0) {
-                this.healthBar.setWidth(0);
-            } else {
-                this.healthBar.setWidth(data.health * 2);
-            }
-        }
-
         this.id = data.tankId;
         this.fireRate = data.fireRate;
         this.health = data.health;
@@ -127,15 +54,6 @@ class Tank extends BaseElement {
         this.direction = data.direction;
         this.turretAngle = data.angle;
         this.damage = data.damage;
-
-        if (this.isDead()) {
-            this.changeColor(0xff9a22);
-            if (this === this.game.currentTank)
-                this.game.currentState.createRespawnBlock();
-        } else {
-            // HARDCODED VALUE OF COLOR
-            this.changeColor(16777215);
-        }
     }
 
     isDead() {
