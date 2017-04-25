@@ -64,6 +64,7 @@ func (c *Client) mapToProtobuf() *pb.MapUpdate {
 	return &pb.MapUpdate{
 		Tanks:   getTanksToProtobuf(c.hub),
 		Bullets: getBulletsToProtobuf(c.hub),
+		Scores:  getScoresToProtobuf(c.hub),
 	}
 }
 

@@ -110,6 +110,11 @@ func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
 	return
 }
 
+func getScoresToProtobuf(hub *Hub) (scores []string) {
+	scores = []string{"DeV1doR - 14k", "Niga - 12k"}
+	return
+}
+
 func ReadTmxAndUpdateMap(fName string) error {
 	_, fileName, _, _ := runtime.Caller(1)
 	fName = strings.Join([]string{path.Dir(fileName), "/", fName}, "")

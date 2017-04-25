@@ -111,6 +111,7 @@ message BulletUpdate {
 message MapUpdate {
     repeated TankUpdate tanks = 1;
     repeated BulletUpdate bullets = 2;
+    repeated string scores = 3;
 }
 
 message Heartbeat {}

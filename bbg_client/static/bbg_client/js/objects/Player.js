@@ -9,6 +9,10 @@ class Player {
         return this._elements.tank;
     }
 
+    get(name) {
+        return this._elements[name];
+    }
+
     add(name, element) {
         this._elements[name] = element;
     }

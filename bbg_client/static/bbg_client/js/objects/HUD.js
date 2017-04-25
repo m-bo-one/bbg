@@ -56,6 +56,10 @@ class HUD extends BaseElement {
         this._killStatBlock();
     }
 
+    updateScore(data) {
+        this._scoreBoard.redraw(data);
+    }
+
     createHealthBar(data) {
         this._healthBar = new HealthBar(this.game, {
             width: 100 * 2,

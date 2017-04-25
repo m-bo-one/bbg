@@ -141,6 +141,8 @@ class GameState extends Phaser.State {
                         pData.tanks.forEach(dData => this.wsTankUpdate(dData));
                     case Array.isArray(pData.bullets):
                         pData.bullets.forEach(dData => this.wsBulletUpdate(dData));
+                    // case Array.isArray(pData.scores):
+                    //     this.wsScoreUpdate(pData.scores);
                 }
                 break;
             case stream.pbProtocol.Type.TTankNew:
@@ -149,12 +151,15 @@ class GameState extends Phaser.State {
             case stream.pbProtocol.Type.TTankRemove:
                 this.wsTankRemove(pData);
                 break;
-            case stream.pbProtocol.Type.TTankUpdate:
-                this.wsTankUpdate(pData);
-                break;
-            case stream.pbProtocol.Type.TBulletUpdate:
-                this.wsBulletUpdate(pData);
-                break;
+            // case stream.pbProtocol.Type.TTankUpdate:
+            //     this.wsTankUpdate(pData);
+            //     break;
+            // case stream.pbProtocol.Type.TBulletUpdate:
+            //     this.wsBulletUpdate(pData);
+            //     break;
+            // case stream.pbProtocol.Type.TScoreUpdate:
+            //     this.wsBulletUpdate(pData);
+            //     break;
             // case stream.pbProtocol.Type.TPong:
             //     this.createOrUpdatePing(pData.timestamp - pData.processed);
             //     break;
@@ -162,6 +167,11 @@ class GameState extends Phaser.State {
                 pprint('Unhandled type receive. Data: ', data);
                 break;
         }
+    }
+
+    wsScoreUpdate(data) {
+        this.game.player.get("HUD")
+            .updateScore(data);
     }
 
     wsPlayerCreate(data) {
