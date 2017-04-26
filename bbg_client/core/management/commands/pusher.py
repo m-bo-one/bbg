@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import uuid
 import concurrent.futures
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
 
 from kafka.common import KafkaError
+import aioredis
 from aiokafka import AIOKafkaConsumer
 
 from core.models import Tank, Stat
@@ -34,8 +36,23 @@ class Command(BaseCommand):
 
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 
+        self._last_stat_id = None
+
+        # call for init
+        self.redis
+
+        self._loop.run_until_complete(self.clear_stats())
+
         for task in [self.listener, self.cron]:
             self._tasks.append(self._loop.create_task(task()))
+
+    @property
+    def redis(self):
+        if not hasattr(self, '_redis'):
+            future = aioredis.create_redis(('localhost', 6379),
+                                           loop=self._loop)
+            self._redis = self._loop.run_until_complete(future)
+        return self._redis
 
     def handle(self, *args, **options):
         try:
@@ -44,12 +61,68 @@ class Command(BaseCommand):
             raise CommandError(err)
         finally:
             self._loop.run_until_complete(self.consumer.stop())
+            self.redis_pool.close()
+            self._loop.run_until_complete(self.redis_pool.wait_closed())
             [task.cancel() for task in self._tasks]
             self._loop.close()
 
+    def get_last_stats(self):
+        filter_by = {}
+        if self._last_stat_id:
+            filter_by['id__gt'] = self._last_stat_id
+
+        resp = {}
+
+        close_old_connections()
+        try:
+            stats = Stat.objects \
+                .filter(**filter_by) \
+                .select_related('tank__name', 'tank__tkey') \
+                .order_by('-created_at')
+        except Exception as err:
+            logging.error("BBGPusher: stats error: ", err)
+            self._last_stat_id = None
+        else:
+            logging.info("BBGPusher: stats successfully received")
+            self._last_stat_id = stats[0].pk
+            for stat in stats:
+                resp.setdefault(stat.tank.tkey, {
+                    'scores': 0,
+                    'name': stat.tank.name
+                })
+                resp[stat.tank.tkey]['scores'] += Stat.SCORE_MAP[stat.event]
+        finally:
+            return resp
+
+    async def clear_stats(self):
+        await self.redis.delete('bbg:scores')
+
+    async def update_stats(self, stats):
+        futures = []
+        for tkey, data in stats.items():
+
+            async def _callback(tkey, data):
+                buff = await self.redis.hget('bbg:scores', tkey)
+                stat = Stat.load_proto(buff)
+                stat.id = uuid.uuid4().hex
+                stat.scores += data['scores']
+                stat.tankId = tkey
+                stat.name = data['name']
+                await self.redis.hset('bbg:scores', tkey,
+                                      stat.SerializeToString())
+
+            futures.append(_callback(tkey, data))
+
+        await asyncio.wait(futures)
+
     async def cron(self):
         while True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(0.5)
+            stats = await self._loop.run_in_executor(self._executor,
+                                                     self.get_last_stats)
+            if stats:
+                logging.info("BBGPusher: updating stats")
+                asyncio.ensure_future(self.update_stats(stats))
 
     async def listener(self):
         while True:

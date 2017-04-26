@@ -141,8 +141,8 @@ class GameState extends Phaser.State {
                         pData.tanks.forEach(dData => this.wsTankUpdate(dData));
                     case Array.isArray(pData.bullets):
                         pData.bullets.forEach(dData => this.wsBulletUpdate(dData));
-                    // case Array.isArray(pData.scores):
-                    //     this.wsScoreUpdate(pData.scores);
+                    case Array.isArray(pData.scores):
+                        this.wsScoreUpdate(pData.scores);
                 }
                 break;
             case stream.pbProtocol.Type.TTankNew:

@@ -12,6 +12,15 @@ enum Direction {
 enum StatStatus {
     Death = 0;
     Kill = 1;
+    Shoot = 2;
+    Hit = 3;
+}
+
+message ScoreUpdate {
+    string id = 1;
+    string tankId = 2;
+    int32 scores = 3;
+    string name = 4;
 }
 
 message MouseAxes {
@@ -111,7 +120,7 @@ message BulletUpdate {
 message MapUpdate {
     repeated TankUpdate tanks = 1;
     repeated BulletUpdate bullets = 2;
-    repeated string scores = 3;
+    repeated ScoreUpdate scores = 3;
 }
 
 message Heartbeat {}

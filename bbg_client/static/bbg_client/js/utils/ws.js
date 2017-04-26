@@ -43,6 +43,7 @@ class ProtoStream {
                     'TankShoot',
                     'BulletUpdate',
                     'Heartbeat',
+                    'ScoreUpdate',
                 ],
             }
         })

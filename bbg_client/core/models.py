@@ -271,19 +271,36 @@ def generate_rtk():
 
 class Stat(models.Model):
 
-    DEATH = 1
-    KILL = 2
+    DEATH = 0
+    KILL = 1
+    SHOOT = 2
+    HIT = 3
 
     EVENT_CHOICES = (
         (DEATH, _("Death")),
         (KILL, _("Kill")),
+        (SHOOT, _("Shoot")),
+        (HIT, _("Hit")),
     )
+
+    SCORE_MAP = {
+        SHOOT: 10,
+        HIT: 25,
+        KILL: 100,
+        DEATH: -50
+    }
 
     EVENT_CHOICES_LIST = [choice[0] for choice in EVENT_CHOICES]
 
     tank = models.ForeignKey('Tank', related_name='stats')
     event = models.IntegerField(choices=EVENT_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @staticmethod
+    def load_proto(buffer):
+        proto = bbg1_pb2.ScoreUpdate()
+        proto.ParseFromString(buffer or b'')
+        return proto
 
     def __str__(self):
         return "TID: {tid}; Event: {event}" \

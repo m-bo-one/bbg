@@ -57,7 +57,19 @@ class HUD extends BaseElement {
     }
 
     updateScore(data) {
-        this._scoreBoard.redraw(data);
+        data.sort((a, b) => {
+            return b.scores - a.scores;
+        });
+        let parsed = data.map(el => {
+            let scStr;
+            if (el.scores >= 1000) {
+                scStr = (el.scores / 1000).toString() + 'k'; 
+            } else {
+                scStr = el.scores.toString();
+            }
+            return `${el.name} - ${scStr}`;
+        });
+        this._scoreBoard.redraw(parsed.slice(0, 8));
     }
 
     createHealthBar(data) {

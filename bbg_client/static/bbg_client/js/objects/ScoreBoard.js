@@ -80,7 +80,7 @@ ScoreBoard.prototype.redraw = function(dataArr) {
     if (!Array.isArray(dataArr) || Array.isArray(dataArr) && dataArr.length === 0) {
         return
     }
-    // this.show();
+    this.show();
     var inC = (this.conf.label !== false) ? 1 : 0,
         boxes = this.group.children;
     if (boxes.length - inC === 0) {
@@ -124,10 +124,12 @@ ScoreBoard.prototype.draw = function(dataArr) {
  * @returns {undefined}
  */
 ScoreBoard.prototype.clear = function() {
+    var el;
     var i = this.group.children.length;
     while (i--) {
         if (this.group.children[i].name === "drawBox") {
-            this.group.children.splice(i, 1);
+            el = this.group.children.splice(i, 1);
+            el[0].destroy();
             this.__removeOffset();
         }
     }

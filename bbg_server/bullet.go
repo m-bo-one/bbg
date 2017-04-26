@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"strconv"
 	"sync/atomic"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
@@ -86,7 +87,12 @@ func (b *Bullet) Update() bool {
 		b.X = nX
 		b.Y = nY
 	})
-	if b.IsOutOfRange() || b.IsColide() {
+	if b.IsOutOfRange() {
+		b.Alive = false
+		world.Remove(b)
+		return false
+	} else if b.IsColide() {
+		go b.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Hit)), b.Tank.ID)
 		b.Alive = false
 		world.Remove(b)
 		return false

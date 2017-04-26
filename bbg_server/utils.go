@@ -18,6 +18,7 @@ import (
 	"github.com/DeV1doR/bbg/bbg_server/engine/tmx"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
+	"github.com/golang/protobuf/proto"
 )
 
 func Keys(v interface{}) ([]string, error) {
@@ -110,8 +111,22 @@ func getBulletsToProtobuf(hub *Hub) (bullets []*pb.BulletUpdate) {
 	return
 }
 
-func getScoresToProtobuf(hub *Hub) (scores []string) {
-	scores = []string{"DeV1doR - 14k", "Niga - 12k"}
+func getScoresToProtobuf(hub *Hub) (scores []*pb.ScoreUpdate) {
+	data, err := hub.redis.HGetAll("bbg:scores").Result()
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+	for _, val := range data {
+		pbMsg := &pb.ScoreUpdate{}
+		if err := proto.Unmarshal([]byte(val), pbMsg); err != nil {
+			log.Errorln(err)
+			return
+		}
+		scores = append(scores, pbMsg)
+	}
+	// log.Fatalf("%+v\n", pbMsg)
+	// scores = []string{"DeV1doR - 14k", "Niga - 12k"}
 	return
 }
 

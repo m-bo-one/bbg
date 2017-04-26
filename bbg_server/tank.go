@@ -123,6 +123,8 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		return err
 	}
 
+	go t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Shoot)), t.ID)
+
 	return nil
 }
 
