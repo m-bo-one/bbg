@@ -85,10 +85,15 @@ func (t *Tank) Resurect() error {
 		return nil
 	}
 	world.Update(t, func() {
-		t.Health = 100
 		t.Cmd.X = int32(random(10, MapWidth))
 		t.Cmd.Y = int32(random(10, MapHeight))
 	})
+
+	if len(world.Nearby(t)) != 0 {
+		t.Resurect()
+	}
+
+	t.Health = 100
 	if err := t.Save(); err != nil {
 		return err
 	}
@@ -105,13 +110,15 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
 		return nil
 	}
-
+	t.Lock()
 	if t.isFullReloaded() {
+		t.Unlock()
 		return nil
 	}
 	t.LastShoot = time.Now().UTC().Unix()
 	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
 	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	t.Unlock()
 
 	bullet, err := NewBullet(t)
 	if err != nil {
