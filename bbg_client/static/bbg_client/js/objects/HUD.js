@@ -38,7 +38,7 @@ class HUD extends BaseElement {
             if (data.health < 0) {
                 this._healthBar.setWidth(0);
             } else {
-                this._healthBar.setWidth(data.health * 2);
+                this._healthBar.setWidth(data.health * 3);
             }
         }
         if (this.tank.isDead()) {
@@ -74,15 +74,15 @@ class HUD extends BaseElement {
 
     createHealthBar(data) {
         this._healthBar = new HealthBar(this.game, {
-            width: 100 * 2,
-            height: 20,
+            width: 100 * 3,
+            height: 30,
             bar: {
-              color: 'red'
+                color: 'red'
             },
             animationDuration: 500,
         });
-        this._healthBar.setPosition(130, this.game.height - 50);
-        this._healthBar.setWidth(data.health * 2);
+        this._healthBar.setPosition(this.game.width / 2, this.game.height - 50);
+        this._healthBar.setWidth(data.health * 3);
         this._healthBar.setFixedToCamera(true);
 
         this.group.add(this._healthBar.bgSprite);

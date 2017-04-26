@@ -3,7 +3,6 @@ package main
 import (
 	"math"
 	"strconv"
-	"sync/atomic"
 
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 )
@@ -24,19 +23,19 @@ type Bullet struct {
 }
 
 func (b *Bullet) GetX() int32 {
-	return int32(b.X)
+	return int32(b.X) - b.GetWidth()/2
 }
 
 func (b *Bullet) GetY() int32 {
-	return int32(b.Y)
+	return int32(b.Y) - b.GetHeight()/2
 }
 
 func (b *Bullet) GetWidth() int32 {
-	return 5
+	return 2
 }
 
 func (b *Bullet) GetHeight() int32 {
-	return 5
+	return 2
 }
 
 func (b *Bullet) ToProtobuf() *pb.BulletUpdate {
@@ -63,8 +62,10 @@ func (b *Bullet) IsColide() bool {
 				return true
 			}
 		case *Bullet:
-			object.Alive = false
-			return true
+			if object.Tank.ID != b.Tank.ID {
+				object.Alive = false
+				return true
+			}
 		}
 	}
 	return false
@@ -101,18 +102,18 @@ func (b *Bullet) Update() bool {
 }
 
 func NewBullet(tank *Tank) (*Bullet, error) {
-	atomic.AddUint32(&bulletIDCounter, 1)
+	bulletIDCounter++
 	b := &Bullet{
 		ID:       bulletIDCounter,
 		Tank:     tank,
-		X:        float64(tank.Cmd.X),
-		Y:        float64(tank.Cmd.Y),
-		Speed:    8,
+		Speed:    5,
 		Angle:    tank.Cmd.Angle,
 		Alive:    true,
 		Distance: tank.TGun.Distance,
 		ws:       tank.ws,
 	}
+	b.X = float64(tank.Cmd.X) + math.Cos(b.Angle)*float64(b.Speed)*4
+	b.Y = float64(tank.Cmd.Y) + math.Sin(b.Angle)*float64(b.Speed)*4
 	world.Add(b)
 	return b, nil
 }

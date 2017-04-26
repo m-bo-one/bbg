@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DeV1doR/bbg/bbg_server/engine"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -25,7 +26,7 @@ type Tank struct {
 	Health        int32
 	Speed         int32
 	Width, Height int32
-	LastShoot     int64
+	LastShoot     float64
 	Cmd           *Cmd
 	ws            *Client
 	bullets       []*Bullet
@@ -35,11 +36,11 @@ type Tank struct {
 }
 
 func (t *Tank) GetX() int32 {
-	return t.Cmd.X - int32(t.Width)/2
+	return t.Cmd.X - t.GetWidth()/2
 }
 
 func (t *Tank) GetY() int32 {
-	return t.Cmd.Y - int32(t.Height)/2
+	return t.Cmd.Y - t.GetHeight()/2
 }
 
 func (t *Tank) GetWidth() int32 {
@@ -54,9 +55,14 @@ func (t *Tank) IsColide() bool {
 	if t.Cmd.X-t.Speed < 0 ||
 		t.Cmd.X+t.Speed > MapWidth ||
 		t.Cmd.Y-t.Speed < 0 ||
-		t.Cmd.Y+t.Speed > MapHeight ||
-		len(world.Nearby(t)) > 0 {
+		t.Cmd.Y+t.Speed > MapHeight {
 		return true
+	}
+	for _, i := range world.Nearby(t) {
+		switch i.(type) {
+		case *engine.MapObject:
+			return true
+		}
 	}
 	return false
 }
@@ -101,7 +107,7 @@ func (t *Tank) Resurect() error {
 }
 
 func (t *Tank) isFullReloaded() bool {
-	return time.Now().UTC().Unix() < t.LastShoot+1
+	return float64(time.Now().UTC().Unix()) >= t.LastShoot
 }
 
 // Shoot command for tank
@@ -111,11 +117,11 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		return nil
 	}
 	t.Lock()
-	if t.isFullReloaded() {
+	if !t.isFullReloaded() {
 		t.Unlock()
 		return nil
 	}
-	t.LastShoot = time.Now().UTC().Unix()
+	t.LastShoot = float64(time.Now().UTC().Unix()) + 0.02
 	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
 	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
 	t.Unlock()
