@@ -10,7 +10,7 @@ class Bullet extends BaseElement {
         this.tank = tank;
 
         this.bulletSprite = this.game.add.sprite(x, y, key);
-        this.bulletSprite.scale.setTo(0.25, 0.25);
+        this.bulletSprite.scale.setTo(0.5);
         this.bulletSprite.anchor.setTo(0.5, 0.5);
         this.game.currentState.midLayer.add(this.bulletSprite);
 
@@ -19,20 +19,6 @@ class Bullet extends BaseElement {
         this.tank.bullets[this.id] = this;
 
         this._worker = setInterval(() => this.gcCleaner(), 1000);
-    }
-
-    static wsUpdate(game, data) {
-        if (game.tanks.hasOwnProperty(data.tankId)) {
-            let tank = game.tanks[data.tankId];
-            let bullet;
-            if (tank.bullets.hasOwnProperty(data.id)) {
-                // console.log(`Update bullet position...`);
-                tank.bullets[data.id].update(data);
-            } else {
-                // console.log(`Creating new bullet...`);
-                new Bullet(game, data, 'bullet', tank);
-            }
-        }
     }
 
     gcCleaner() {
@@ -60,7 +46,6 @@ class Bullet extends BaseElement {
         this.tankId = data.tankId;
         this.alive = data.alive;
         this.updatedAt = Math.floor(Date.now() / 1000);
-
         if (!this.alive) {
             this.destroy();
         }

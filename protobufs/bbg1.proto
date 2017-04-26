@@ -12,6 +12,15 @@ enum Direction {
 enum StatStatus {
     Death = 0;
     Kill = 1;
+    Shoot = 2;
+    Hit = 3;
+}
+
+message ScoreUpdate {
+    string id = 1;
+    string tankId = 2;
+    int32 scores = 3;
+    string name = 4;
 }
 
 message MouseAxes {
@@ -111,6 +120,18 @@ message BulletUpdate {
 message MapUpdate {
     repeated TankUpdate tanks = 1;
     repeated BulletUpdate bullets = 2;
+    repeated ScoreUpdate scores = 3;
+}
+
+message Heartbeat {}
+
+message Ping {
+    int64 timestamp = 1;
+}
+
+message Pong {
+    int64 timestamp = 1;
+    int64 processed = 2;
 }
 
 message BBGProtocol {
@@ -126,6 +147,7 @@ message BBGProtocol {
         TTankShoot = 8;
         TBulletUpdate = 9;
         TMapUpdate = 10;
+        THeartbeat = 11;
 
         TUnhandledType = 99;
 
@@ -145,7 +167,8 @@ message BBGProtocol {
     TankReg tankReg = 17;
     BulletUpdate bulletUpdate = 20;
     MapUpdate mapUpdate = 30;
+    Heartbeat heartbeat = 31;
 
-    bool ping = 100;
-    bool pong = 101;
+    Ping ping = 100;
+    Pong pong = 101;
 }

@@ -4,7 +4,7 @@ class MainState extends Phaser.State {
 
     create() {
         this.stage.backgroundColor = "#ffffff";
-        this.game.canvas.style.border = "1px solid black";
+        // this.game.canvas.style.border = "1px solid black";
 
         this.game.clearMenu();
 

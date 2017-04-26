@@ -5,7 +5,7 @@ import MenuState from 'states/MenuState';
 class Game extends Phaser.Game {
 
     constructor() {
-        super(1024, 768, Phaser.CANVAS, 'content', null);
+        super(window.innerWidth, window.innerHeight, Phaser.CANVAS, 'content', null);
 
         this.preMenu = document.getElementById("pre-menu");
         this.menu = document.getElementById("menu");
@@ -13,6 +13,8 @@ class Game extends Phaser.Game {
         this.state.add('MainState', MainState, false);
         this.state.add('MenuState', MenuState, false);
         this.state.add('GameState', GameState, false);
+
+        this.scaleRatio = 0.8;
 
         (predefinedVars.currentUser !== null) ? this.state.start('MenuState') : this.state.start('MainState');
     }
@@ -24,10 +26,6 @@ class Game extends Phaser.Game {
 
     clearMenu() {
         this.menu.innerHTML = "";
-    }
-
-    create() {
-        this.world.setBounds(0, 0, 2000, 2000);
     }
 
     flushMap() {

@@ -4,7 +4,7 @@ class MenuState extends Phaser.State {
 
     create() {
         this.stage.backgroundColor = "#ffffff";
-        this.game.canvas.style.border = "1px solid black";
+        // this.game.canvas.style.border = "1px solid black";
 
         this.game.clearMenu();
 
@@ -95,6 +95,10 @@ class MenuState extends Phaser.State {
     }
 
     createTankTab(parent, data) {
+        // if (predefinedVars.debug) {
+        //     this.game.state.start('GameState', true, true, data);
+        //     return;
+        // }
         let callback = (e) => {
             e.preventDefault();
             this.game.state.start('GameState', true, true, data);

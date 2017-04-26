@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DeV1doR/bbg/bbg_server/engine"
 	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -25,29 +26,43 @@ type Tank struct {
 	Health        int32
 	Speed         int32
 	Width, Height int32
-	LastShoot     int64
+	LastShoot     float64
 	Cmd           *Cmd
 	ws            *Client
+	bullets       []*Bullet
 
 	TGun
 	sync.RWMutex
 }
 
 func (t *Tank) GetX() int32 {
-	return t.Cmd.X
+	return t.Cmd.X - t.GetWidth()/2
 }
 
 func (t *Tank) GetY() int32 {
-	return t.Cmd.Y
+	return t.Cmd.Y - t.GetHeight()/2
 }
 
-func (t *Tank) GetRadius() int32 {
-	return int32(t.Width+t.Height) / 2
+func (t *Tank) GetWidth() int32 {
+	return int32(t.Width)
+}
+
+func (t *Tank) GetHeight() int32 {
+	return int32(t.Height)
 }
 
 func (t *Tank) IsColide() bool {
-	if t.Cmd.X-t.Speed < 0 || t.Cmd.X+t.Speed > MapWidth || t.Cmd.Y-t.Speed < 0 || t.Cmd.Y+t.Speed > MapHeight {
+	if t.Cmd.X-t.Speed < 0 ||
+		t.Cmd.X+t.Speed > MapWidth ||
+		t.Cmd.Y-t.Speed < 0 ||
+		t.Cmd.Y+t.Speed > MapHeight {
 		return true
+	}
+	for _, i := range world.Nearby(t) {
+		switch i.(type) {
+		case *engine.MapObject:
+			return true
+		}
 	}
 	return false
 }
@@ -55,12 +70,12 @@ func (t *Tank) IsColide() bool {
 func (t *Tank) GetDamage(b *Bullet) error {
 	t.Health -= int32(b.Tank.Damage)
 	if t.IsDead() {
-		t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
-		b.Tank.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
+		world.Remove(t)
+		go t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Death)), t.ID)
+		go b.Tank.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Kill)), b.Tank.ID)
 		go func() {
 			time.Sleep(time.Second * 3)
 			t.Resurect()
-			t.ws.sendProtoData(pb.BBGProtocol_TTankUpdate, t.ToProtobuf(), true)
 		}()
 	} else {
 		if err := t.Save(); err != nil {
@@ -76,10 +91,15 @@ func (t *Tank) Resurect() error {
 		return nil
 	}
 	world.Update(t, func() {
-		t.Health = 100
 		t.Cmd.X = int32(random(10, MapWidth))
 		t.Cmd.Y = int32(random(10, MapHeight))
 	})
+
+	if len(world.Nearby(t)) != 0 {
+		t.Resurect()
+	}
+
+	t.Health = 100
 	if err := t.Save(); err != nil {
 		return err
 	}
@@ -87,7 +107,7 @@ func (t *Tank) Resurect() error {
 }
 
 func (t *Tank) isFullReloaded() bool {
-	return time.Now().UTC().Unix() < t.LastShoot+2
+	return float64(time.Now().UTC().Unix()) >= t.LastShoot
 }
 
 // Shoot command for tank
@@ -96,24 +116,27 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		log.Infof("Can't make a shoot. Tank #%s is dead.", t.ID)
 		return nil
 	}
-
-	if t.isFullReloaded() {
+	t.Lock()
+	if !t.isFullReloaded() {
+		t.Unlock()
 		return nil
 	}
-
-	t.LastShoot = time.Now().UTC().Unix()
+	t.LastShoot = float64(time.Now().UTC().Unix()) + 0.02
 	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
 	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	t.Unlock()
 
 	bullet, err := NewBullet(t)
 	if err != nil {
 		return err
 	}
-	go bullet.Update()
+	t.bullets = append(t.bullets, bullet)
 
 	if err := t.Save(); err != nil {
 		return err
 	}
+
+	go t.ws.hub.sendToPushService("tank_stat", strconv.Itoa(int(pb.StatStatus_Shoot)), t.ID)
 
 	return nil
 }

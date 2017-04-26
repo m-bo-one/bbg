@@ -1,5 +1,7 @@
 import Tank from 'objects/Tank';
 import Bullet from 'objects/Bullet';
+import HUD from 'objects/HUD';
+import Player from 'objects/Player';
 import ProtoStream from 'utils/ws';
 import {pprint, isDeviceMobile, getKeyByValue, toFirstLowerCase} from 'utils/helpers';
 
@@ -19,14 +21,16 @@ class GameState extends Phaser.State {
 
         this.game.imageLoad('tiles', 'tilemaps/roads.png');
 
-        if (isDeviceMobile()) {
-            this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            this.game.scale.setShowAll();
-            window.addEventListener('resize', function () {
-                this.game.scale.refresh();
-            });
+        this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        this.game.scale.pageAlignHorizontally = true;
+        this.game.scale.pageAlignVertically = true;
+        this.game.scale.forceLandscape = true;
+        this.game.scale.parentIsWindow = true;
+        this.game.scale.refresh();
+
+        window.addEventListener('resize', () => {
             this.game.scale.refresh();
-        }
+        });
     }
 
     create() {
@@ -35,7 +39,7 @@ class GameState extends Phaser.State {
         this.game.clearMenu();
         this.game.startGameSheet();
 
-        this.game.canvas.style.border = "1px solid black";
+        // this.game.canvas.style.border = "1px solid black";
         this.game.tanks = {};
 
         this.backLayer = this.game.add.group();
@@ -43,6 +47,8 @@ class GameState extends Phaser.State {
         this.frontLayer = this.game.add.group();
 
         this.createMap();
+
+        this.tickRate = 120;
 
         this.cursors = this.game.input.keyboard.addKeys({
             W: Phaser.Keyboard.W,
@@ -75,43 +81,8 @@ class GameState extends Phaser.State {
 
         let road = this.map.createLayer('Road', undefined, undefined, this.backLayer);
         road.resizeWorld();
-    }
 
-    createStatBlock() {
-        let initX = 30;
-        let initY = 20;
-        let offset = 30;
-        this._scoreText = this.game.add.text(initX, initY, `Scores: ${this.initData["scores-count"]}`, this.frontLayer);
-        this._killText = this.game.add.text(initX, initY + offset, `Kills: ${this.initData["kill-count"]}`, this.frontLayer);
-        this._deathText = this.game.add.text(initX, initY + 2 * offset, `Death: ${this.initData["death-count"]}`, this.frontLayer);
-
-        this._scoreText.fixedToCamera = true; 
-        this._killText.fixedToCamera = true; 
-        this._deathText.fixedToCamera = true; 
-    }
-
-    killStatBlock() {
-        this._scoreText.destroy(); 
-        this._killText.destroy(); 
-        this._deathText.destroy();        
-    }
-
-    createRespawnBlock(counter=3) {
-        if (typeof this._restartText === "object") return;
-        this._restartText = this.game.add.text(0, 0, `Respawn at: ${counter}`);
-        this._restartText.x = this.game.width - 50 - this._restartText.width;
-        this._restartText.y = this.game.height - 75;
-        this._restartText.fixedToCamera = true; 
-        let id = setInterval(() => {
-            counter--;
-            if (counter === 0) {
-                clearInterval(id);
-                this._restartText.destroy();
-                delete this._restartText;
-                return
-            }
-            this._restartText.text = `Respawn at: ${counter}`;
-        }, 1000);
+        // this.world.setBounds(0, 0, 2000, 2000);
     }
 
     update() {
@@ -145,6 +116,17 @@ class GameState extends Phaser.State {
         // this.game.debug.spriteInfo(this.game.currentTank.getSprite(), 640, 14);
     }
 
+    startHeartbeat() {
+        this._shId = setInterval(() => {
+            this.game.stream.send('Heartbeat', {});
+        }, 1000 / this.tickRate);
+    }
+
+    stopHeartbeat() {
+        clearInterval(this._shId);
+        delete this._shId;
+    }
+
     wsUpdate(data) {
         let stream = this.game.stream;
         let kData = getKeyByValue(stream.pbProtocol.Type, data.type);
@@ -152,32 +134,103 @@ class GameState extends Phaser.State {
 
         if (typeof pData === 'undefined') return;
 
-        pprint('Received message: ', pData)
-
         switch(data.type) {
             case stream.pbProtocol.Type.TMapUpdate:
                 switch(true) {
                     case Array.isArray(pData.tanks):
-                        pData.tanks.forEach(dData => Tank.wsUpdate(game, dData));
+                        pData.tanks.forEach(dData => this.wsTankUpdate(dData));
                     case Array.isArray(pData.bullets):
-                        pData.bullets.forEach(dData => Bullet.wsUpdate(game, dData));
+                        pData.bullets.forEach(dData => this.wsBulletUpdate(dData));
+                    case Array.isArray(pData.scores):
+                        this.wsScoreUpdate(pData.scores);
                 }
                 break;
             case stream.pbProtocol.Type.TTankNew:
-                Tank.wsCreate(game, pData);
-                break;
-            case stream.pbProtocol.Type.TTankUpdate:
-                Tank.wsUpdate(game, pData);
+                this.wsPlayerCreate(pData);
                 break;
             case stream.pbProtocol.Type.TTankRemove:
-                Tank.wsRemove(game, pData);
+                this.wsTankRemove(pData);
                 break;
-            case stream.pbProtocol.Type.TBulletUpdate:
-                Bullet.wsUpdate(game, pData);
-                break;
+            // case stream.pbProtocol.Type.TTankUpdate:
+            //     this.wsTankUpdate(pData);
+            //     break;
+            // case stream.pbProtocol.Type.TBulletUpdate:
+            //     this.wsBulletUpdate(pData);
+            //     break;
+            // case stream.pbProtocol.Type.TScoreUpdate:
+            //     this.wsBulletUpdate(pData);
+            //     break;
+            // case stream.pbProtocol.Type.TPong:
+            //     this.createOrUpdatePing(pData.timestamp - pData.processed);
+            //     break;
             case stream.pbProtocol.Type.TUnhandledType:
                 pprint('Unhandled type receive. Data: ', data);
                 break;
+        }
+    }
+
+    wsScoreUpdate(data) {
+        this.game.player.get("HUD")
+            .updateScore(data);
+    }
+
+    wsPlayerCreate(data) {
+        if (!this.game.tanks.hasOwnProperty(data.tankId)) {
+            pprint('Creating player...');
+
+            this.game.player = new Player(game);
+            this.game.player.add("HUD", new HUD(this.game, Object.assign(data, this.initData), this.frontLayer));
+            this.game.player.add("tank", new Tank(this.game, data, 'tank', 'gun-turret'));
+
+            this.game.currentTank = this.game.player.tank;
+
+            this.game.camera.follow(this.game.currentTank.getSprite());
+            this.game.input.addMoveCallback(
+                this.game.currentTank.rotate.bind(this.game.currentTank));
+
+            this.game.tanks[data.tankId] = this.game.currentTank;
+            this.startHeartbeat();
+        }
+    }
+
+    wsTankUpdate(data) {
+        pprint('Receive tank update. Applying...');
+        if (!this.game.tanks.hasOwnProperty(data.tankId)) {
+            console.log('Creating new tank...');
+            this.game.tanks[data.tankId] = new Tank(this.game, data, 'tank', 'gun-turret');
+        } else if (this.game.player.tank.id == data.tankId) {
+            this.game.player.update(data);
+        } else {
+            this.game.tanks[data.tankId].update(data);
+        }
+    }
+
+    wsTankRemove(data) {
+        if (this.game.tanks.hasOwnProperty(data.tankId)) {
+            pprint(`Removing tank ID:${data.tankId}...`);
+
+            if (this.game.currentTank && this.game.currentTank.id == data.tankId) {
+                let keyboard = this.game.input.keyboard;
+                keyboard.onDownCallback = keyboard.onUpCallback = keyboard.onPressCallback = null;
+                this.game.input.moveCallbacks = [];
+            } else {
+                this.game.tanks[data.tankId].destroy();
+                delete this.game.tanks[data.tankId];
+            }
+        }
+    }
+
+    wsBulletUpdate(data) {
+        if (this.game.tanks.hasOwnProperty(data.tankId)) {
+            let tank = this.game.tanks[data.tankId];
+            let bullet;
+            if (tank.bullets.hasOwnProperty(data.id)) {
+                // console.log(`Update bullet position...`);
+                tank.bullets[data.id].update(data);
+            } else {
+                // console.log(`Creating new bullet...`);
+                new Bullet(this.game, data, 'bullet', tank);
+            }
         }
     }
 

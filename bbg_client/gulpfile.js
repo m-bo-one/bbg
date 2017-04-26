@@ -95,18 +95,22 @@ function copyProtobuf() {
  */
 function updateGoProtobuf() {
     // golang
-    exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs')
+    exec('mkdir -p ' + SERVER_PATH.substr(2) + '/protobufs');
     // del([SERVER_PATH.substr(2) + '/protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
-         '--go_out=' + SERVER_PATH.substr(2) + '/protobufs')
+         '--go_out=' + SERVER_PATH.substr(2) + '/protobufs');
 
     // python
-    exec('mkdir -p protobufs')
+    exec('mkdir -p protobufs');
     // del(['protobufs/**/*.*']);
     exec('protoc ' + PROTO_PATH.substr(2) + '/*.proto ' +
          '--proto_path=' + PROTO_PATH.substr(2) + ' ' +
-         '--python_out=protobufs')
+         '--python_out=protobufs');
+}
+
+function copyDjangoStatic() {
+     exec('workon bbg && ./manage.py collectstatic --noinput');
 }
 
 function copyJS() {
@@ -188,7 +192,7 @@ function serve() {
     
     var options = {
         ui: false,
-        proxy: '127.0.0.1:8000',
+        proxy: 'local.bbgdev1.ga',
         open: false,
         notify: false,
         port: 8001,
@@ -198,7 +202,7 @@ function serve() {
     
     browserSync.init(options);
 
-    gulp.watch('./**/*.py', ['watch-py']);
+    // gulp.watch('./**/*.py', ['watch-py']);
 
     // Watches for changes in files inside the './src' folder.
     gulp.watch(SOURCE_PATH + '/**/*.js', ['watch-js']);
@@ -219,7 +223,8 @@ function serve() {
 
 
 gulp.task('cleanBuild', cleanBuild);
-gulp.task('copyCSS', ['cleanBuild'], copyCSS);
+gulp.task('copyDjangoStatic', ['cleanBuild'], copyDjangoStatic);
+gulp.task('copyCSS', ['copyDjangoStatic'], copyCSS);
 gulp.task('copyJS', ['copyCSS'], copyJS);
 gulp.task('copyProtobuf', ['copyJS'], copyProtobuf);
 gulp.task('updateGoProtobuf', ['copyProtobuf'], updateGoProtobuf);
@@ -228,10 +233,10 @@ gulp.task('fastBuild', build);
 gulp.task('serve', ['build'], serve);
 
 if (!isProduction()) {
-    gulp.task('watch-py', [], browserSync.reload);
+    // gulp.task('watch-py', [], browserSync.reload);
     gulp.task('watch-js', ['fastBuild'], browserSync.reload);
-    gulp.task('watch-static', ['copyJS', 'copyCSS'], browserSync.reload);
-    gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf'], browserSync.reload);
+    gulp.task('watch-static', ['copyJS', 'copyCSS']);
+    gulp.task('watch-proto', ['copyProtobuf', 'updateGoProtobuf']);
 }
 
 gulp.task('default', ['serve']);

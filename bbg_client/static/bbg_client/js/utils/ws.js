@@ -26,7 +26,7 @@ class ProtoStream {
         };
         this._ws.onclose = (e) => {
             pprint('ws closed', e);
-            this.retry(url, callback, ...args);
+            // this.retry(url, callback, ...args);
         };
         this._ws.onerror = (e) => {
             pprint('ws error', e);
@@ -42,24 +42,31 @@ class ProtoStream {
                     'TankMove',
                     'TankShoot',
                     'BulletUpdate',
+                    'Heartbeat',
+                    'ScoreUpdate',
                 ],
             }
         })
         this.onLoadComplete();
     }
 
-    retry(url, callback, ...args) {
-        game.stream._ws.close();
-        console.log('restarting...');
-        try {
-            setTimeout(() => {
-                game.stream = new ProtoStream(url, callback, ...args);
-                pprint('successfully restarted.');
-            }, 2000);
-        } catch (e) {
-            pprint('failed, trying again...');
-        }
-    }
+    // retry(url, callback, ...args) {
+    //     game.stream._ws.close();
+    //     try {
+    //         game.currentState.stopHeartbeat();
+    //     } catch(e) {
+    //         console.log(e);
+    //     }
+    //     console.log('restarting...');
+    //     try {
+    //         setTimeout(() => {
+    //             game.stream = new ProtoStream(url, callback, ...args);
+    //             pprint('successfully restarted.');
+    //         }, 2000);
+    //     } catch (e) {
+    //         pprint('failed, trying again...');
+    //     }
+    // }
 
     get connected() {
         return this._ws.readyState == this._ws.OPEN && this.proto.loaded;
@@ -84,11 +91,11 @@ class ProtoStream {
             type: this.pbProtocol.Type[`T${type}`] || this.pbProtocol.Type.UnhandledType,
             version: 1
         }
-        if(data) {
+        if(typeof data !== undefined) {
             type = toFirstLowerCase(type);
             prData[type] = data;
         }
-        console.log("Obj2pb: ", prData);
+        // console.log("Obj2pb: ", prData);
         let msg = this.pbProtocol.fromObject(prData);
         let encoded = this.pbProtocol.encode(msg).finish();
         this._ws.send(encoded);
@@ -97,9 +104,13 @@ class ProtoStream {
     onmessage(bytearray) {
         let decoded = this.pbProtocol.decode(bytearray);
         if (Object.keys(decoded).length != 0) {
-            pprint('decoded: ', decoded);
+            // pprint('decoded: ', decoded);
             game.currentState.wsUpdate(decoded);
         }
+    }
+
+    getPing() {
+        this.send('Ping', {timestamp: Math.floor(Date.now() / 1000)});
     }
 
     loadProtos(pdata) {

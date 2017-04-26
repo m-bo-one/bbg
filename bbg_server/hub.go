@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 
 	sarama "gopkg.in/Shopify/sarama.v1"
 
@@ -41,6 +42,27 @@ func NewHub(dbClient DBClient) *Hub {
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 		DBClient:   dbClient,
+	}
+}
+
+func (h *Hub) startGameLoop() {
+	ticker := time.NewTicker(time.Second / TickRate)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			for client, ok := range h.clients {
+				if ok && client.tank == nil {
+					continue
+				}
+				for i := len(client.tank.bullets) - 1; i >= 0; i-- {
+					if !client.tank.bullets[i].Update() {
+						go client.sendProtoData(pb.BBGProtocol_TMapUpdate, client.mapToProtobuf(), true)
+						client.tank.bullets = append(client.tank.bullets[:i], client.tank.bullets[i+1:]...)
+					}
+				}
+			}
+		}
 	}
 }
 
