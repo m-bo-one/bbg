@@ -122,8 +122,8 @@ func (t *Tank) Shoot(pbMsg *pb.TankShoot) error {
 		return nil
 	}
 	t.LastShoot = float64(time.Now().UTC().Unix()) + 0.02
-	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
-	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.X
+	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.Y
 	t.Unlock()
 
 	bullet, err := NewBullet(t)
@@ -165,8 +165,8 @@ func (t *Tank) TurretRotate(pbMsg *pb.TankRotate) error {
 		log.Infof("Can't make a turret rotation. Tank #%s is dead.", t.ID)
 		return nil
 	}
-	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.GetX()
-	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.GetY()
+	t.Cmd.MouseAxes.X = pbMsg.MouseAxes.X
+	t.Cmd.MouseAxes.Y = pbMsg.MouseAxes.Y
 	t.UpdateAngle()
 	if err := t.Save(); err != nil {
 		return err
@@ -180,7 +180,7 @@ func (t *Tank) Move(pbMsg *pb.TankMove) error {
 		return nil
 	}
 	world.Update(t, func() {
-		t.Cmd.Direction = pbMsg.GetDirection()
+		t.Cmd.Direction = pbMsg.Direction
 
 		switch t.Cmd.Direction {
 		case pb.Direction_N:
@@ -246,22 +246,22 @@ func LoadTank(c *Client, redis *redis.Client, tKey string) (*Tank, error) {
 		return nil, err
 	}
 	tank := &Tank{
-		ID:     pbMsg.GetId(),
-		Name:   pbMsg.GetName(),
-		Health: pbMsg.GetHealth(),
-		Speed:  pbMsg.GetSpeed(),
-		Width:  pbMsg.GetWidth(),
-		Height: pbMsg.GetHeight(),
+		ID:     pbMsg.Id,
+		Name:   pbMsg.Name,
+		Health: pbMsg.Health,
+		Speed:  pbMsg.Speed,
+		Width:  pbMsg.Width,
+		Height: pbMsg.Height,
 		TGun: TGun{
-			Bullets:  pbMsg.Gun.GetBullets(),
-			Damage:   pbMsg.Gun.GetDamage(),
-			Distance: pbMsg.Gun.GetDistance(),
+			Bullets:  pbMsg.Gun.Bullets,
+			Damage:   pbMsg.Gun.Damage,
+			Distance: pbMsg.Gun.Distance,
 		},
 		Cmd: &Cmd{
-			X:         pbMsg.GetX(),
-			Y:         pbMsg.GetY(),
-			Direction: pbMsg.GetDirection(),
-			Angle:     pbMsg.GetAngle(),
+			X:         pbMsg.X,
+			Y:         pbMsg.Y,
+			Direction: pbMsg.Direction,
+			Angle:     pbMsg.Angle,
 			MouseAxes: &MouseAxes{},
 		},
 		ws: c,
@@ -276,19 +276,19 @@ func (t *Tank) Update(pbMsg *pb.Tank) error {
 	world.Update(t, func() {
 		t.Lock()
 		{
-			t.ID = pbMsg.GetId()
-			t.Cmd.X = pbMsg.GetX()
-			t.Cmd.Y = pbMsg.GetY()
-			t.Name = pbMsg.GetName()
-			t.Health = pbMsg.GetHealth()
-			t.Speed = pbMsg.GetSpeed()
-			t.Width = pbMsg.GetWidth()
-			t.Height = pbMsg.GetHeight()
-			t.TGun.Bullets = pbMsg.Gun.GetBullets()
-			t.TGun.Damage = pbMsg.Gun.GetDamage()
-			t.TGun.Distance = pbMsg.Gun.GetDistance()
-			t.Cmd.Angle = pbMsg.GetAngle()
-			t.Cmd.Direction = pbMsg.GetDirection()
+			t.ID = pbMsg.Id
+			t.Cmd.X = pbMsg.X
+			t.Cmd.Y = pbMsg.Y
+			t.Name = pbMsg.Name
+			t.Health = pbMsg.Health
+			t.Speed = pbMsg.Speed
+			t.Width = pbMsg.Width
+			t.Height = pbMsg.Height
+			t.TGun.Bullets = pbMsg.Gun.Bullets
+			t.TGun.Damage = pbMsg.Gun.Damage
+			t.TGun.Distance = pbMsg.Gun.Distance
+			t.Cmd.Angle = pbMsg.Angle
+			t.Cmd.Direction = pbMsg.Direction
 		}
 		t.Unlock()
 	})

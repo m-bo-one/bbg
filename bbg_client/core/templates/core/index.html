@@ -1,4 +1,4 @@
-{% load static %}
+{% load static from cdn_static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +24,7 @@
     <script type="text/javascript">
         var predefinedVars = {
             wsURL: "{{ BBG_WS_URL }}",
-            staticURL: "{{ STATIC_URL }}",
+            staticURL: "{{ CDN_URL }}",
             socialAuthURL: {
                 facebook: "{% url "social:begin" "facebook" %}",
                 github: "{% url "social:begin" "github" %}",
