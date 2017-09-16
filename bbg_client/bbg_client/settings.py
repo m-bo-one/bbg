@@ -184,6 +184,8 @@ USE_TZ = True
 # websocket server
 BBG_WS_URL = '127.0.0.1:8888'
 
+CDN_URL = 'http://127.0.0.1:5747/'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -191,7 +193,7 @@ BBG_WS_URL = '127.0.0.1:8888'
 GULP_PRODUCTION_COMMAND = ''
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/srv/www/bbgdev1.ga'
+STATIC_ROOT = '../www/bbgdev1.ga'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 

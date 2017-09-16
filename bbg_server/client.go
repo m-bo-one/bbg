@@ -113,7 +113,7 @@ func (c *Client) manageEvent(message *pb.BBGProtocol) error {
 			return errors.New("TankReg: Tank already registred for this client")
 		}
 		msg := message.GetTankReg()
-		tKey, err := c.validateTKey(msg.GetToken(), msg.GetTKey())
+		tKey, err := c.validateTKey(msg.Token, msg.TKey)
 		if err != nil {
 			return fmt.Errorf("TankReg: Invalid tKey: %s. Detailed: %s", tKey, err)
 		}

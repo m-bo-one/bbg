@@ -116,8 +116,12 @@ class ProtoStream {
     loadProtos(pdata) {
         this._proto = {};
         let _length = Object.keys(pdata).length;
+        let root = new protobuf.Root();
+        root.resolvePath = (origin, target) => {
+            return `${predefinedVars.staticURL}${target}`;
+        };
         Object.keys(pdata).forEach(pkey => {
-            protobuf.load(`static/protobufs/${pkey}.proto`, (err, root) => {
+            protobuf.load(`protobufs/${pkey}.proto`, root, (err, root) => {
                 _length--;
                 if (err) {
                     pprint("Error during protobuf loading. ", err);

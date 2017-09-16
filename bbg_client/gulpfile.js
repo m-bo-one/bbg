@@ -12,6 +12,10 @@ var babelify = require('babelify');
 var browserify = require('browserify');
 var browserSync = require('browser-sync');
 var exec = require('child_process').exec;
+var express = require('express')
+var serveStatic = require('serve-static')
+
+var app = express();
 
 /**
  * Using different folders/file names? Change these constants:
@@ -31,7 +35,7 @@ var DJANGO_PATH = './';
 // Static path
 var STATIC_URL = 'www/bbgdev1.ga';
 var STATIC_PATH = './static/bbg_client';
-var BUILD_PATH = '/srv/' + STATIC_URL;
+var BUILD_PATH = './../' + STATIC_URL;
 
 var SCRIPTS_PATH = BUILD_PATH + '/build';
 var CSS_PATH = SCRIPTS_PATH;
@@ -41,6 +45,8 @@ var PROTO_PATH = './../protobufs';
 
 var ENTRY_FILE = SOURCE_PATH + '/index.js';
 var OUTPUT_FILE = 'game.js';
+
+var staticPort = 5747;
 
 var keepFiles = false;
 
@@ -189,15 +195,22 @@ function build() {
 function serve() {
 
     if (isProduction()) return;
+
+    app.use(serveStatic(BUILD_PATH, {
+        setHeaders: function (res, path) {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+        }
+    }));
+    app.listen(staticPort);
     
     var options = {
         ui: false,
-        proxy: 'local.bbgdev1.ga',
+        proxy: '127.0.0.1:8000',
         open: false,
         notify: false,
         port: 8001,
         localOnly: true,
-        online: false,
+        online: false
     };
     
     browserSync.init(options);
