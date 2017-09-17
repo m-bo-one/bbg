@@ -23,3 +23,6 @@ MySQL 5.7<br>
 
 ### Kill dev server
 ./deployment/kill.sh
+
+### Or Docker (better)
+`docker-compose build client server && docker-compose up -d`

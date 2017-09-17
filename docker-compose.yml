@@ -38,6 +38,7 @@ services:
       - mysql
       - kafka
       - redis
+      - client
     networks:
       - bbg_net
     environment:
