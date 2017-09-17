@@ -1,0 +1,59 @@
+version: "3"
+services:
+  client:
+    image: client
+    build:
+      context: .
+      dockerfile: ./bbg_client/Dockerfile
+    ports:
+     - 8666:8666
+     - 5747:5747
+    volumes:
+      - .:/client
+    depends_on:
+      - mysql
+      - kafka
+    networks:
+      - bbg_net
+    environment:
+      - MYSQL_HOST=mysql
+      - REDIS_HOST=redis
+      - KAFKA_HOST=kafka
+      - DJANGO_HOST=0.0.0.0
+      - DJANGO_PORT=8666
+    command:
+      sh ./deployment/start_server.sh
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    networks:
+      - bbg_net
+
+  kafka:
+    image: wurstmeister/kafka
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ADVERTISED_PORT=9092
+      - KAFKA_CREATE_TOPICS=tank_stats
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - bbg_net
+
+  mysql:
+    image: mysql:5.6
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=bbg
+    networks:
+      - bbg_net
+
+  redis:
+    image: redis:alpine
+    networks:
+      - bbg_net
+
+networks:
+  bbg_net:

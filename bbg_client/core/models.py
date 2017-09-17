@@ -37,7 +37,7 @@ class BBGUser(AbstractUser):
 
 class RTankProxy(object):
 
-    kproducer = KafkaProducer(bootstrap_servers='localhost:9092',
+    kproducer = KafkaProducer(bootstrap_servers=settings.KAFKA_BROKER_URL,
                               key_serializer=str.encode)
 
     def send_update(self):

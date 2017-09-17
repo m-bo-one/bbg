@@ -105,7 +105,7 @@ DATABASES = {
         'NAME': 'bbg',
         'USER': 'root',
         'PASSWORD': 'root',
-        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'HOST': os.getenv('MYSQL_HOST', 'localhost'),
         'PORT': '',
         'OPTIONS': {
             'charset': 'utf8mb4'
@@ -116,7 +116,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://%s:6379/0" % os.getenv('REDIS_HOST', '127.0.0.1'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "SOCKET_CONNECT_TIMEOUT": 5,  # in seconds
@@ -129,6 +129,7 @@ CACHES = {
     }
 }
 
+KAFKA_BROKER_URL = '%s:9092' % os.getenv('KAFKA_HOST', 'localhost')
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
