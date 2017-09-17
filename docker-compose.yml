@@ -1,7 +1,7 @@
 version: "3"
 services:
   client:
-    image: client
+    image: bbg-client
     build:
       context: .
       dockerfile: ./bbg_client/Dockerfile
@@ -13,6 +13,7 @@ services:
     depends_on:
       - mysql
       - kafka
+      - redis
     networks:
       - bbg_net
     environment:
@@ -21,6 +22,28 @@ services:
       - KAFKA_HOST=kafka
       - DJANGO_HOST=0.0.0.0
       - DJANGO_PORT=8666
+    command:
+      sh ./deployment/start_client.sh
+
+  server:
+    image: bbg-server
+    build:
+      context: .
+      dockerfile: ./bbg_server/Dockerfile
+    ports:
+     - 9191:9191
+    volumes:
+      - .:/src
+    depends_on:
+      - mysql
+      - kafka
+      - redis
+    networks:
+      - bbg_net
+    environment:
+      - MYSQL_HOST=mysql
+      - REDIS_HOST=redis
+      - KAFKA_HOST=kafka
     command:
       sh ./deployment/start_server.sh
 

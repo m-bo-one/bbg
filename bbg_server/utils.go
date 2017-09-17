@@ -14,9 +14,9 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/DeV1doR/bbg/bbg_server/engine"
-	"github.com/DeV1doR/bbg/bbg_server/engine/tmx"
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	"bbg_server/engine"
+	"bbg_server/engine/tmx"
+	pb "bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 )

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DeV1doR/bbg/bbg_server/engine"
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	"bbg_server/engine"
+	pb "bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/proto"

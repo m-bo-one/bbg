@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	pb "bbg_server/protobufs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"

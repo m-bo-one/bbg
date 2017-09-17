@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	pb "bbg_server/protobufs"
 )
 
 type MouseAxes struct {

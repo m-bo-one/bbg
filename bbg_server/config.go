@@ -23,7 +23,6 @@ type conf struct {
 	Addr            string
 	ProtocolVersion uint32
 	SecretKey       string
-	ProxyHost       string
 	Db              struct {
 		Redis dbParams
 		MySQL dbParams
@@ -55,6 +54,18 @@ func getConf(configName string) *conf {
 	}
 	if err = json.Unmarshal(jsonFile, c); err != nil {
 		log.Fatalf("Unmarshal: %v", err)
+	}
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost != "" {
+		c.Db.Redis.Addr = redisHost + ":6379"
+	}
+	mysqlHost := os.Getenv("MYSQL_HOST")
+	if mysqlHost != "" {
+		c.Db.MySQL.Addr = mysqlHost + ":3306"
+	}
+	kafkaHost := os.Getenv("KAFKA_HOST")
+	if kafkaHost != "" {
+		c.Db.Kafka.Addr = kafkaHost + ":9092"
 	}
 	return c
 }

@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import uuid
@@ -5,6 +6,7 @@ import concurrent.futures
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
+from django.conf import settings
 
 from kafka.common import KafkaError
 import aioredis
@@ -30,7 +32,7 @@ class Command(BaseCommand):
         self.consumer = AIOKafkaConsumer(
             *self._topics,
             loop=self._loop,
-            bootstrap_servers='localhost:9092')
+            bootstrap_servers=settings.KAFKA_BROKER_URL)
 
         self._loop.run_until_complete(self.consumer.start())
 
@@ -39,20 +41,15 @@ class Command(BaseCommand):
         self._last_stat_id = None
 
         # call for init
-        self.redis
+        future = aioredis.create_redis(
+            (os.getenv('REDIS_HOST', '127.0.0.1'), 6379),
+            loop=self._loop)
+        self.redis = self._loop.run_until_complete(future)
 
         self._loop.run_until_complete(self.clear_stats())
 
         for task in [self.listener, self.cron]:
             self._tasks.append(self._loop.create_task(task()))
-
-    @property
-    def redis(self):
-        if not hasattr(self, '_redis'):
-            future = aioredis.create_redis(('localhost', 6379),
-                                           loop=self._loop)
-            self._redis = self._loop.run_until_complete(future)
-        return self._redis
 
     def handle(self, *args, **options):
         try:

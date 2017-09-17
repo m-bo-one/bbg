@@ -12,3 +12,4 @@ www/
 __pycache__/
 production.json
 settings_local.py
+.DS_Store

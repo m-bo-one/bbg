@@ -11,7 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	pb "bbg_server/protobufs"
 )
 
 // hub maintains the set of active clients and broadcasts messages to the

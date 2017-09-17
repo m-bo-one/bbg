@@ -4,7 +4,7 @@ import (
 	"math"
 	"strconv"
 
-	pb "github.com/DeV1doR/bbg/bbg_server/protobufs"
+	pb "bbg_server/protobufs"
 )
 
 var bulletIDCounter uint32

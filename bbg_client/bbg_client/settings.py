@@ -183,7 +183,9 @@ USE_TZ = True
 
 
 # websocket server
-BBG_WS_URL = '127.0.0.1:8888'
+BBG_WS_URL = '{host}:{port}' \
+    .format(host=os.getenv('WS_HOST', '127.0.0.1'),
+            port=os.getenv('WS_PORT', '9191'))
 
 CDN_URL = 'http://127.0.0.1:5747/'
 
